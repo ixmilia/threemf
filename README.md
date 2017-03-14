@@ -1,7 +1,25 @@
 ﻿IxMilia.ThreeMf
 ===============
 
-A portable .NET library for reading and writing 3mf files.
+A portable .NET library for reading and writing 3MF files.
+
+## Usage
+
+Open a 3MF file:
+
+``` C#
+using System.IO;
+using IxMilia.ThreeMf;
+// ...
+
+ThreeMfFile file;
+using (FileStream fs = new FileStream(@"C:\Path\To\File.3mf", FileMode.Open))
+{
+    file = ThreeMfFile.Load(fs);
+}
+
+// use `file` here
+```
 
 ## Building locally
 
