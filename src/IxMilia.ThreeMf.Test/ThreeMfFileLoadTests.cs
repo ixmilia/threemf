@@ -16,6 +16,11 @@ namespace IxMilia.ThreeMf.Test
             return ThreeMfFile.LoadXml(document.Root);
         }
 
+        private ThreeMfFile FromContent(string content)
+        {
+            return ParseXml($@"<model xmlns=""{ThreeMfFile.ModelNamespace}"">" + content + "</model>");
+        }
+
         private void AssertUnits(string unitsString, ThreeMfModelUnits expectedUnits)
         {
             var file = ParseXml($@"<model unit=""{unitsString}"" xml:lang=""en-US"" xmlns=""{ThreeMfFile.ModelNamespace}""></model>");
@@ -65,6 +70,16 @@ namespace IxMilia.ThreeMf.Test
             AssertUnits("meter", ThreeMfModelUnits.Meter);
 
             Assert.Throws<ThreeMfParseException>(() => ParseXml($@"<model unit=""mile"" xml:lang=""en-US"" xmlns=""{ThreeMfFile.ModelNamespace}""></model>"));
+        }
+
+        [Fact]
+        public void MetadataReaderTest()
+        {
+            var file = FromContent(@"
+<metadata name=""Title"">some title</metadata>
+");
+            Assert.Equal("some title", file.Title);
+            Assert.Null(file.Description);
         }
     }
 }
