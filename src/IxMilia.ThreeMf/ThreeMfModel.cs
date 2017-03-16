@@ -1,5 +1,6 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -26,6 +27,8 @@ namespace IxMilia.ThreeMf
         public string Rating { get; set; }
         public string CreationDate { get; set; }
         public string ModificationDate { get; set; }
+
+        public IList<ThreeMfResource> Resources { get; } = new List<ThreeMfResource>();
 
         private void ParseModelUnits(string value)
         {
@@ -61,6 +64,8 @@ namespace IxMilia.ThreeMf
         {
             var model = new ThreeMfModel();
             model.ParseModelUnits(root.Attribute("unit")?.Value);
+
+            // metadata
             model.Title = GetMetadataValue(root, Metadata_Title);
             model.Designer = GetMetadataValue(root, Metadata_Designer);
             model.Description = GetMetadataValue(root, Metadata_Description);
@@ -69,7 +74,29 @@ namespace IxMilia.ThreeMf
             model.Rating = GetMetadataValue(root, Metadata_Rating);
             model.CreationDate = GetMetadataValue(root, Metadata_CreationDate);
             model.ModificationDate = GetMetadataValue(root, Metadata_ModificationDate);
+
+            model.ParseResources(root.Element(XName.Get("resources", ModelNamespace)));
+
+            // TODO: <build>
+
             return model;
+        }
+
+        private void ParseResources(XElement resources)
+        {
+            if (resources == null)
+            {
+                return;
+            }
+
+            foreach (var element in resources.Elements())
+            {
+                var resource = ThreeMfResource.ParseResource(element);
+                if (resource != null)
+                {
+                    Resources.Add(resource);
+                }
+            }
         }
 
         private static string GetMetadataValue(XElement root, string name)
