@@ -12,6 +12,11 @@ namespace IxMilia.ThreeMf
     {
         private const string RelationshipNamespace = "http://schemas.openxmlformats.org/package/2006/relationships";
         private const string ModelRelationshipType = "http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel";
+        private const string RelsEntryPath = "_rels/.rels";
+        private const string TargetAttributeName = "Target";
+        private const string TypeAttributeName = "Type";
+
+        private static XName RelationshipName = XName.Get("Relationship", RelationshipNamespace);
 
         public IList<ThreeMfModel> Models { get; } = new List<ThreeMfModel>();
 
@@ -39,7 +44,7 @@ namespace IxMilia.ThreeMf
 
         private static string GetModelFilePath(ZipArchive archive)
         {
-            var relsEntry = archive.GetEntry("_rels/.rels");
+            var relsEntry = archive.GetEntry(RelsEntryPath);
             if (relsEntry == null)
             {
                 throw new ThreeMfPackageException("Invalid package: missing relationship file.");
@@ -48,13 +53,13 @@ namespace IxMilia.ThreeMf
             using (var relsStream = relsEntry.Open())
             {
                 var document = XDocument.Load(relsStream);
-                var firstRelationship = document.Root.Elements(XName.Get("Relationship", RelationshipNamespace)).FirstOrDefault(e => e.Attribute("Type")?.Value == ModelRelationshipType);
+                var firstRelationship = document.Root.Elements(RelationshipName).FirstOrDefault(e => e.Attribute(TypeAttributeName)?.Value == ModelRelationshipType);
                 if (firstRelationship == null)
                 {
                     throw new ThreeMfPackageException("Package does not contain a root 3MF relation.");
                 }
 
-                var target = firstRelationship.Attribute("Target")?.Value;
+                var target = firstRelationship.Attribute(TargetAttributeName)?.Value;
                 if (target == null)
                 {
                     throw new ThreeMfPackageException("Relationship target not specified.");

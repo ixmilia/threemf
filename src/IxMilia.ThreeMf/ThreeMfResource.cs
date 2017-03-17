@@ -6,6 +6,9 @@ namespace IxMilia.ThreeMf
 {
     public abstract class ThreeMfResource
     {
+        private static XName ObjectName = XName.Get("object", ThreeMfModel.ModelNamespace);
+        private static XName BaseMaterialsName = XName.Get("basematerials", ThreeMfModel.ModelNamespace);
+
         internal static int ParseAttributeInt(XElement element, string attributeName, bool isRequired = false)
         {
             var att = element.Attribute(attributeName);
@@ -24,13 +27,18 @@ namespace IxMilia.ThreeMf
 
         internal static ThreeMfResource ParseResource(XElement element)
         {
-            switch (element.Name.LocalName)
+            if (element.Name == ObjectName)
             {
-                case "object":
-                    return ThreeMfObject.ParseObject(element);
-                case "basematerials":
-                default:
-                    return null;
+                return ThreeMfObject.ParseObject(element);
+            }
+            else if (element.Name == BaseMaterialsName)
+            {
+                // NYI
+                return null;
+            }
+            else
+            {
+                return null;
             }
         }
     }

@@ -6,6 +6,10 @@ namespace IxMilia.ThreeMf
 {
     public struct ThreeMfVertex
     {
+        private const string XAttributeName = "x";
+        private const string YAttributeName = "y";
+        private const string ZAttributeName = "z";
+
         public double X { get; set; }
         public double Y { get; set; }
         public double Z { get; set; }
@@ -48,9 +52,9 @@ namespace IxMilia.ThreeMf
 
         internal static ThreeMfVertex ParseVertex(XElement element)
         {
-            var x = ParseDouble(element, "x");
-            var y = ParseDouble(element, "y");
-            var z = ParseDouble(element, "z");
+            var x = ParseDouble(element, XAttributeName);
+            var y = ParseDouble(element, YAttributeName);
+            var z = ParseDouble(element, ZAttributeName);
             return new ThreeMfVertex(x, y, z);
         }
 

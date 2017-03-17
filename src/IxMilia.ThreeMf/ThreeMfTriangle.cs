@@ -7,6 +7,10 @@ namespace IxMilia.ThreeMf
 {
     public struct ThreeMfTriangle
     {
+        private const string V1AttributeName = "v1";
+        private const string V2AttributeName = "v2";
+        private const string V3AttributeName = "v3";
+
         // TODO:
         //   p1 = overrides object level pindex for the first vertex
         //   p2
@@ -26,9 +30,9 @@ namespace IxMilia.ThreeMf
 
         internal static ThreeMfTriangle ParseTriangle(XElement triangleElement, IList<ThreeMfVertex> vertices)
         {
-            var v1Index = ThreeMfResource.ParseAttributeInt(triangleElement, "v1", isRequired: true);
-            var v2Index = ThreeMfResource.ParseAttributeInt(triangleElement, "v2", isRequired: true);
-            var v3Index = ThreeMfResource.ParseAttributeInt(triangleElement, "v3", isRequired: true);
+            var v1Index = ThreeMfResource.ParseAttributeInt(triangleElement, V1AttributeName, isRequired: true);
+            var v2Index = ThreeMfResource.ParseAttributeInt(triangleElement, V2AttributeName, isRequired: true);
+            var v3Index = ThreeMfResource.ParseAttributeInt(triangleElement, V3AttributeName, isRequired: true);
 
             if (v1Index == v2Index || v1Index == v3Index || v2Index == v3Index)
             {

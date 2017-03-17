@@ -6,6 +6,13 @@ namespace IxMilia.ThreeMf
 {
     public class ThreeMfObject : ThreeMfResource
     {
+        private const string IdAttributeName = "id";
+        private const string NameAttributeName = "name";
+        private const string PartNumberAttributeName = "partnumber";
+        private const string TypeAttributeName = "type";
+
+        private static XName MeshName = XName.Get("mesh", ThreeMfModel.ModelNamespace);
+
         // TODO:
         //   pid = reference to property group element with matching id attribute.  required if pindex is specified
         //   pindex = a zero-based index into the properties group specified by pid.  this is used to build the object
@@ -26,11 +33,11 @@ namespace IxMilia.ThreeMf
         internal static ThreeMfObject ParseObject(XElement element)
         {
             var obj = new ThreeMfObject();
-            obj.Id = ParseAttributeInt(element, "id", isRequired: true);
-            obj.Type = ParseObjectType(element.Attribute("type")?.Value);
-            obj.PartNumber = element.Attribute("partnumber")?.Value;
-            obj.Name = element.Attribute("name")?.Value;
-            obj.Mesh = ThreeMfMesh.ParseMesh(element.Element(XName.Get("mesh", ThreeMfModel.ModelNamespace)));
+            obj.Id = ParseAttributeInt(element, IdAttributeName, isRequired: true);
+            obj.Type = ParseObjectType(element.Attribute(TypeAttributeName)?.Value);
+            obj.PartNumber = element.Attribute(PartNumberAttributeName)?.Value;
+            obj.Name = element.Attribute(NameAttributeName)?.Value;
+            obj.Mesh = ThreeMfMesh.ParseMesh(element.Element(MeshName));
             return obj;
         }
 

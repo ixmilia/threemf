@@ -7,6 +7,11 @@ namespace IxMilia.ThreeMf
 {
     public class ThreeMfMesh
     {
+        private static XName VerticesName = XName.Get("vertices", ThreeMfModel.ModelNamespace);
+        private static XName VertexName = XName.Get("vertex", ThreeMfModel.ModelNamespace);
+        private static XName TrianglesName = XName.Get("triangles", ThreeMfModel.ModelNamespace);
+        private static XName TriangleName = XName.Get("triangle", ThreeMfModel.ModelNamespace);
+
         public IList<ThreeMfTriangle> Triangles { get; } = new List<ThreeMfTriangle>();
 
         internal static ThreeMfMesh ParseMesh(XElement element)
@@ -17,14 +22,14 @@ namespace IxMilia.ThreeMf
             }
 
             var vertices = new List<ThreeMfVertex>();
-            foreach (var vertexElement in element.Element(XName.Get("vertices", ThreeMfModel.ModelNamespace)).Elements(XName.Get("vertex", ThreeMfModel.ModelNamespace)))
+            foreach (var vertexElement in element.Element(VerticesName).Elements(VertexName))
             {
                 var vertex = ThreeMfVertex.ParseVertex(vertexElement);
                 vertices.Add(vertex);
             }
 
             var mesh = new ThreeMfMesh();
-            foreach (var triangleElement in element.Element(XName.Get("triangles", ThreeMfModel.ModelNamespace)).Elements(XName.Get("triangle", ThreeMfModel.ModelNamespace)))
+            foreach (var triangleElement in element.Element(TrianglesName).Elements(TriangleName))
             {
                 var triangle = ThreeMfTriangle.ParseTriangle(triangleElement, vertices);
                 mesh.Triangles.Add(triangle);

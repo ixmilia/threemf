@@ -17,6 +17,11 @@ namespace IxMilia.ThreeMf
         private const string Metadata_Rating = "Rating";
         private const string Metadata_CreationDate = "CreationDate";
         private const string Metadata_ModificationDate = "ModificationDate";
+        private const string UnitAttributeName = "unit";
+        private const string NameAttributeName = "name";
+
+        private static XName ResourcesName = XName.Get("resources", ModelNamespace);
+        private static XName MetadataName = XName.Get("metadata", ModelNamespace);
 
         public ThreeMfModelUnits ModelUnits { get; set; }
         public string Title { get; set; }
@@ -63,7 +68,7 @@ namespace IxMilia.ThreeMf
         public static ThreeMfModel LoadXml(XElement root)
         {
             var model = new ThreeMfModel();
-            model.ParseModelUnits(root.Attribute("unit")?.Value);
+            model.ParseModelUnits(root.Attribute(UnitAttributeName)?.Value);
 
             // metadata
             model.Title = GetMetadataValue(root, Metadata_Title);
@@ -75,7 +80,7 @@ namespace IxMilia.ThreeMf
             model.CreationDate = GetMetadataValue(root, Metadata_CreationDate);
             model.ModificationDate = GetMetadataValue(root, Metadata_ModificationDate);
 
-            model.ParseResources(root.Element(XName.Get("resources", ModelNamespace)));
+            model.ParseResources(root.Element(ResourcesName));
 
             // TODO: <build>
 
@@ -101,7 +106,7 @@ namespace IxMilia.ThreeMf
 
         private static string GetMetadataValue(XElement root, string name)
         {
-            return root.Elements(XName.Get("metadata", ModelNamespace))?.Where(e => e.Attribute("name")?.Value == name).SingleOrDefault()?.Value;
+            return root.Elements(MetadataName)?.Where(e => e.Attribute(NameAttributeName)?.Value == name).SingleOrDefault()?.Value;
         }
     }
 }
