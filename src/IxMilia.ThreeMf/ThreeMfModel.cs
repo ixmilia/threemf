@@ -40,6 +40,11 @@ namespace IxMilia.ThreeMf
 
         public IList<ThreeMfResource> Resources { get; } = new List<ThreeMfResource>();
 
+        public ThreeMfModel()
+        {
+            ModelUnits = ThreeMfModelUnits.Millimeter;
+        }
+
         private void ParseModelUnits(string value)
         {
             switch (value)
