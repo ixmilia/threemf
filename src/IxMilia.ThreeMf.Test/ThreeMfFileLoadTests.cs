@@ -29,11 +29,24 @@ namespace IxMilia.ThreeMf.Test
             {
                 using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, true))
                 {
-                    var entry = archive.CreateEntry("3D/3dmodel.model");
-                    using (var stream = entry.Open())
-                    using (var writer = new StreamWriter(stream))
                     {
-                        writer.WriteLine($@"<model unit=""millimeter"" xml:lang=""en-US"" xmlns=""{ThreeMfModel.ModelNamespace}""></model>");
+                        var entry = archive.CreateEntry("_rels/.rels");
+                        using (var stream = entry.Open())
+                        using (var writer = new StreamWriter(stream))
+                        {
+                            writer.WriteLine(@"<Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">");
+                            writer.WriteLine(@"  <Relationship Target=""/non/standard/path/to/model.model"" Id=""rel0"" Type=""http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"" />");
+                            writer.WriteLine(@"</Relationships>");
+                        }
+                    }
+
+                    {
+                        var entry = archive.CreateEntry("non/standard/path/to/model.model");
+                        using (var stream = entry.Open())
+                        using (var writer = new StreamWriter(stream))
+                        {
+                            writer.WriteLine($@"<model unit=""millimeter"" xml:lang=""en-US"" xmlns=""{ThreeMfModel.ModelNamespace}""></model>");
+                        }
                     }
                 }
 
