@@ -40,5 +40,19 @@ namespace IxMilia.ThreeMf.Test
 </model>
 ", model);
         }
+
+        [Fact]
+        public void WriteMetadataTest()
+        {
+            var model = new ThreeMfModel();
+            model.Title = "some title";
+            VerifyModelXml(@"
+<model unit=""millimeter"" xml:lang=""en-US"" xmlns=""http://schemas.microsoft.com/3dmanufacturing/core/2015/02"">
+  <metadata name=""Title"">some title</metadata>
+  <resources />
+  <build />
+</model>
+", model);
+        }
     }
 }

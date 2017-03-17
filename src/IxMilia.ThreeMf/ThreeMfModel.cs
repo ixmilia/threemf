@@ -110,12 +110,27 @@ namespace IxMilia.ThreeMf
             return new XElement(ModelName,
                 new XAttribute(UnitAttributeName, ModelUnits.ToString().ToLowerInvariant()),
                 new XAttribute(XmlLanguageAttributeName, DefaultLanguage),
+                GetMetadataXElement(Metadata_Title, Title),
+                GetMetadataXElement(Metadata_Designer, Designer),
+                GetMetadataXElement(Metadata_Description, Description),
+                GetMetadataXElement(Metadata_Copyright, Copyright),
+                GetMetadataXElement(Metadata_LicenseTerms, LicenseTerms),
+                GetMetadataXElement(Metadata_Rating, Rating),
+                GetMetadataXElement(Metadata_CreationDate, CreationDate),
+                GetMetadataXElement(Metadata_ModificationDate, ModificationDate),
                 new XElement(ResourcesName,
                     Resources.Select(r => r.ToXElement())),
                 new XElement(BuildName,
                     primaryResource == null
                         ? null
                         : new XElement(ItemName, new XAttribute(ObjectIdAttributeName, primaryResource.Id))));
+        }
+
+        private XElement GetMetadataXElement(string metadataType, string value)
+        {
+            return string.IsNullOrEmpty(value)
+                ? null
+                : new XElement(MetadataName, new XAttribute(NameAttributeName, metadataType), value);
         }
 
         private void ParseResources(XElement resources)
