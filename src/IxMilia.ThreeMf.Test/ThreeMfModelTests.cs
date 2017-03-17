@@ -1,5 +1,7 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 
 namespace IxMilia.ThreeMf.Test
@@ -21,6 +23,11 @@ namespace IxMilia.ThreeMf.Test
         {
             var actual = StripXmlns(mesh.ToXElement().ToString());
             Assert.Equal(xml.Trim(), actual);
+        }
+
+        private ThreeMfModel ParseXml(string contents, IEnumerable<string> additionalSupportedNamespaces = null)
+        {
+            return ThreeMfModelLoadTests.ParseXml(contents, additionalSupportedNamespaces);
         }
 
         [Fact]
@@ -87,6 +94,32 @@ namespace IxMilia.ThreeMf.Test
   </triangles>
 </mesh>
 ", mesh);
+        }
+
+        [Fact]
+        public void ReadRequiredExtensionsTest()
+        {
+            var xml = $@"<model requiredextensions=""i"" xmlns=""{ThreeMfModel.ModelNamespace}"" xmlns:i=""http://www.ixmilia.com"" />";
+
+            // unsupported required namespace
+            Assert.Throws<ThreeMfParseException>(() => ParseXml(xml));
+
+            // supported required namespace
+            var model = ParseXml(xml, additionalSupportedNamespaces: new[] { "http://www.ixmilia.com" });
+            Assert.Equal("http://www.ixmilia.com", model.RequiredExtensionNamespaces.Single());
+        }
+
+        [Fact]
+        public void WriteRequiredExtensionsTest()
+        {
+            var model = new ThreeMfModel();
+            model.RequiredExtensionNamespaces.Add("http://www.ixmilia.com");
+            VerifyModelXml(@"
+<model unit=""millimeter"" requiredextensions=""a"" xmlns:a=""http://www.ixmilia.com"">
+  <resources />
+  <build />
+</model>
+", model);
         }
     }
 }

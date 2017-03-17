@@ -1,5 +1,6 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Xunit;
@@ -8,10 +9,10 @@ namespace IxMilia.ThreeMf.Test
 {
     public class ThreeMfModelLoadTests
     {
-        private ThreeMfModel ParseXml(string contents)
+        internal static ThreeMfModel ParseXml(string contents, IEnumerable<string> additionalSupportedNamespaces = null)
         {
             var document = XDocument.Parse(contents);
-            return ThreeMfModel.LoadXml(document.Root);
+            return ThreeMfModel.LoadXml(document.Root, additionalSupportedNamespaces);
         }
 
         private ThreeMfModel FromContent(string content)

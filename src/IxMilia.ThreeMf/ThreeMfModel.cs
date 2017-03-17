@@ -1,5 +1,6 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -8,7 +9,7 @@ namespace IxMilia.ThreeMf
 {
     public class ThreeMfModel
     {
-        public const string ModelNamespace = "http://schemas.microsoft.com/3dmanufacturing/core/2015/02";
+        internal const string ModelNamespace = "http://schemas.microsoft.com/3dmanufacturing/core/2015/02";
         private const string Metadata_Title = "Title";
         private const string Metadata_Designer = "Designer";
         private const string Metadata_Description = "Description";
@@ -20,6 +21,7 @@ namespace IxMilia.ThreeMf
         private const string UnitAttributeName = "unit";
         private const string NameAttributeName = "name";
         private const string ObjectIdAttributeName = "objectid";
+        private const string RequiredExtensionsAttributeName = "requiredextensions";
         private const string DefaultLanguage = "en-US";
 
         private static XName ModelName = XName.Get("model", ModelNamespace);
@@ -29,7 +31,12 @@ namespace IxMilia.ThreeMf
         private static XName ItemName = XName.Get("item", ModelNamespace);
         private static XName XmlLanguageAttributeName = XNamespace.Xml + "lang";
 
+        private static HashSet<string> KnownExtensionNamespaces = new HashSet<string>()
+        {
+        };
+
         public ThreeMfModelUnits ModelUnits { get; set; }
+        public HashSet<string> RequiredExtensionNamespaces { get; private set; }
         public string Title { get; set; }
         public string Designer { get; set; }
         public string Description { get; set; }
@@ -44,6 +51,7 @@ namespace IxMilia.ThreeMf
         public ThreeMfModel()
         {
             ModelUnits = ThreeMfModelUnits.Millimeter;
+            RequiredExtensionNamespaces = new HashSet<string>();
         }
 
         private void ParseModelUnits(string value)
@@ -76,10 +84,23 @@ namespace IxMilia.ThreeMf
             }
         }
 
-        public static ThreeMfModel LoadXml(XElement root)
+        internal static ThreeMfModel LoadXml(XElement root, IEnumerable<string> additionalSupportedNamespaces = null)
         {
             var model = new ThreeMfModel();
             model.ParseModelUnits(root.Attribute(UnitAttributeName)?.Value);
+            var requiredNamespaces = (root.Attribute(RequiredExtensionsAttributeName)?.Value ?? string.Empty)
+                .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(prefix => root.GetNamespaceOfPrefix(prefix).NamespaceName);
+            model.RequiredExtensionNamespaces = new HashSet<string>(requiredNamespaces);
+
+            var additionalNamespaces = new HashSet<string>(additionalSupportedNamespaces ?? new string[0]);
+            foreach (var rns in model.RequiredExtensionNamespaces)
+            {
+                if (!KnownExtensionNamespaces.Contains(rns) && !additionalNamespaces.Contains(rns))
+                {
+                    throw new ThreeMfParseException($"The required namespace '{rns}' is not supported.");
+                }
+            }
 
             // metadata
             model.Title = GetMetadataValue(root, Metadata_Title);
@@ -98,7 +119,7 @@ namespace IxMilia.ThreeMf
             return model;
         }
 
-        public XElement ToXElement()
+        internal XElement ToXElement()
         {
             for (int i = 0; i < Resources.Count; i++)
             {
@@ -107,9 +128,23 @@ namespace IxMilia.ThreeMf
 
             // TODO: handle multiple build items?
             var primaryResource = Resources.OfType<ThreeMfObject>().FirstOrDefault();
-            return new XElement(ModelName,
+            var modelXml = new XElement(ModelName);
+
+            var requiredNamespaces = new List<Tuple<string, string>>();
+            var currentNs = 'a';
+            foreach (var ns in RequiredExtensionNamespaces.OrderBy(n => n))
+            {
+                requiredNamespaces.Add(Tuple.Create(ns, currentNs.ToString()));
+                currentNs++;
+            }
+
+            modelXml.Add(
                 new XAttribute(UnitAttributeName, ModelUnits.ToString().ToLowerInvariant()),
+                requiredNamespaces.Count == 0
+                    ? null
+                    : new XAttribute(RequiredExtensionsAttributeName, string.Join(" ", requiredNamespaces.Select(rns => rns.Item2))),
                 new XAttribute(XmlLanguageAttributeName, DefaultLanguage),
+                requiredNamespaces.Select(rns => new XAttribute(XNamespace.Xmlns + rns.Item2, rns.Item1)),
                 GetMetadataXElement(Metadata_Title, Title),
                 GetMetadataXElement(Metadata_Designer, Designer),
                 GetMetadataXElement(Metadata_Description, Description),
@@ -124,6 +159,7 @@ namespace IxMilia.ThreeMf
                     primaryResource == null
                         ? null
                         : new XElement(ItemName, new XAttribute(ObjectIdAttributeName, primaryResource.Id))));
+            return modelXml;
         }
 
         private XElement GetMetadataXElement(string metadataType, string value)

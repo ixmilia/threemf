@@ -13,7 +13,7 @@ namespace IxMilia.ThreeMf
 
         public IList<ThreeMfTriangle> Triangles { get; } = new List<ThreeMfTriangle>();
 
-        public XElement ToXElement()
+        internal XElement ToXElement()
         {
             var vertices = Triangles.SelectMany(t => new[] { t.V1, t.V2, t.V3 }).Distinct().ToList();
             var verticesXml = vertices.Select(v => v.ToXElement());
