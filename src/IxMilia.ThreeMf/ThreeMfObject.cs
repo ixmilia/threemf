@@ -30,6 +30,12 @@ namespace IxMilia.ThreeMf
             Type = ThreeMfObjectType.Model;
         }
 
+        internal override XElement ToXElement()
+        {
+            // TODO: write actual data
+            return new XElement(ObjectName);
+        }
+
         internal static ThreeMfObject ParseObject(XElement element)
         {
             var obj = new ThreeMfObject();

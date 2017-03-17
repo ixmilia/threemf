@@ -1,13 +1,16 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
 using System.Xml.Linq;
 
 namespace IxMilia.ThreeMf
 {
     public abstract class ThreeMfResource
     {
-        private static XName ObjectName = XName.Get("object", ThreeMfModel.ModelNamespace);
-        private static XName BaseMaterialsName = XName.Get("basematerials", ThreeMfModel.ModelNamespace);
+        protected static XName ObjectName = XName.Get("object", ThreeMfModel.ModelNamespace);
+        protected static XName BaseMaterialsName = XName.Get("basematerials", ThreeMfModel.ModelNamespace);
+
+        abstract internal XElement ToXElement();
 
         internal static int ParseAttributeInt(XElement element, string attributeName, bool isRequired = false)
         {

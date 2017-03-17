@@ -1,5 +1,6 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -19,9 +20,13 @@ namespace IxMilia.ThreeMf
         private const string Metadata_ModificationDate = "ModificationDate";
         private const string UnitAttributeName = "unit";
         private const string NameAttributeName = "name";
+        private const string DefaultLanguage = "en-US";
 
+        private static XName ModelName = XName.Get("model", ModelNamespace);
+        private static XName BuildName = XName.Get("build", ModelNamespace);
         private static XName ResourcesName = XName.Get("resources", ModelNamespace);
         private static XName MetadataName = XName.Get("metadata", ModelNamespace);
+        private static XName XmlLanguageAttributeName = XNamespace.Xml + "lang";
 
         public ThreeMfModelUnits ModelUnits { get; set; }
         public string Title { get; set; }
@@ -85,6 +90,16 @@ namespace IxMilia.ThreeMf
             // TODO: <build>
 
             return model;
+        }
+
+        internal XElement ToXElement()
+        {
+            return new XElement(ModelName,
+                new XAttribute(UnitAttributeName, ModelUnits.ToString().ToLowerInvariant()),
+                new XAttribute(XmlLanguageAttributeName, DefaultLanguage),
+                new XElement(ResourcesName,
+                    Resources.Select(r => r.ToXElement())),
+                new XElement(BuildName));
         }
 
         private void ParseResources(XElement resources)
