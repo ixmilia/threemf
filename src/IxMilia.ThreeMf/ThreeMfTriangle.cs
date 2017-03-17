@@ -11,6 +11,8 @@ namespace IxMilia.ThreeMf
         private const string V2AttributeName = "v2";
         private const string V3AttributeName = "v3";
 
+        internal static XName TriangleName = XName.Get("triangle", ThreeMfModel.ModelNamespace);
+
         // TODO:
         //   p1 = overrides object level pindex for the first vertex
         //   p2
@@ -26,6 +28,19 @@ namespace IxMilia.ThreeMf
             V1 = v1;
             V2 = v2;
             V3 = v3;
+        }
+
+        internal XElement ToXElement(List<ThreeMfVertex> vertices)
+        {
+            return new XElement(TriangleName,
+                new XAttribute(V1AttributeName, GetVertexIndex(vertices, V1)),
+                new XAttribute(V2AttributeName, GetVertexIndex(vertices, V2)),
+                new XAttribute(V3AttributeName, GetVertexIndex(vertices, V3)));
+        }
+
+        private static int GetVertexIndex(List<ThreeMfVertex> vertices, ThreeMfVertex item)
+        {
+            return vertices.IndexOf(item);
         }
 
         internal static ThreeMfTriangle ParseTriangle(XElement triangleElement, IList<ThreeMfVertex> vertices)

@@ -1,6 +1,5 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -20,12 +19,14 @@ namespace IxMilia.ThreeMf
         private const string Metadata_ModificationDate = "ModificationDate";
         private const string UnitAttributeName = "unit";
         private const string NameAttributeName = "name";
+        private const string ObjectIdAttributeName = "objectid";
         private const string DefaultLanguage = "en-US";
 
         private static XName ModelName = XName.Get("model", ModelNamespace);
         private static XName BuildName = XName.Get("build", ModelNamespace);
         private static XName ResourcesName = XName.Get("resources", ModelNamespace);
         private static XName MetadataName = XName.Get("metadata", ModelNamespace);
+        private static XName ItemName = XName.Get("item", ModelNamespace);
         private static XName XmlLanguageAttributeName = XNamespace.Xml + "lang";
 
         public ThreeMfModelUnits ModelUnits { get; set; }
@@ -97,14 +98,24 @@ namespace IxMilia.ThreeMf
             return model;
         }
 
-        internal XElement ToXElement()
+        public XElement ToXElement()
         {
+            for (int i = 0; i < Resources.Count; i++)
+            {
+                Resources[i].Id = i + 1;
+            }
+
+            // TODO: handle multiple build items?
+            var primaryResource = Resources.OfType<ThreeMfObject>().FirstOrDefault();
             return new XElement(ModelName,
                 new XAttribute(UnitAttributeName, ModelUnits.ToString().ToLowerInvariant()),
                 new XAttribute(XmlLanguageAttributeName, DefaultLanguage),
                 new XElement(ResourcesName,
                     Resources.Select(r => r.ToXElement())),
-                new XElement(BuildName));
+                new XElement(BuildName,
+                    primaryResource == null
+                        ? null
+                        : new XElement(ItemName, new XAttribute(ObjectIdAttributeName, primaryResource.Id))));
         }
 
         private void ParseResources(XElement resources)

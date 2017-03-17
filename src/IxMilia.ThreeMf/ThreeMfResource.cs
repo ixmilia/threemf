@@ -10,6 +10,8 @@ namespace IxMilia.ThreeMf
         protected static XName ObjectName = XName.Get("object", ThreeMfModel.ModelNamespace);
         protected static XName BaseMaterialsName = XName.Get("basematerials", ThreeMfModel.ModelNamespace);
 
+        public int Id { get; internal set; }
+
         abstract internal XElement ToXElement();
 
         internal static int ParseAttributeInt(XElement element, string attributeName, bool isRequired = false)

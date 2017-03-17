@@ -10,6 +10,8 @@ namespace IxMilia.ThreeMf
         private const string YAttributeName = "y";
         private const string ZAttributeName = "z";
 
+        internal static XName VertexName = XName.Get("vertex", ThreeMfModel.ModelNamespace);
+
         public double X { get; set; }
         public double Y { get; set; }
         public double Z { get; set; }
@@ -19,6 +21,14 @@ namespace IxMilia.ThreeMf
             X = x;
             Y = y;
             Z = z;
+        }
+
+        internal XElement ToXElement()
+        {
+            return new XElement(VertexName,
+                new XAttribute(XAttributeName, X),
+                new XAttribute(YAttributeName, Y),
+                new XAttribute(ZAttributeName, Z));
         }
 
         public override string ToString()

@@ -36,7 +36,7 @@ namespace IxMilia.ThreeMf
 
         private static XmlWriterSettings WriterSettings = new XmlWriterSettings()
         {
-            Encoding = new UTF8Encoding(),
+            Encoding = Encoding.UTF8,
             Indent = true,
             IndentChars = "  "
         };
