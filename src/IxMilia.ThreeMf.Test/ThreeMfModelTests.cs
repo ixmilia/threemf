@@ -52,9 +52,7 @@ namespace IxMilia.ThreeMf.Test
       </mesh>
     </object>
   </resources>
-  <build>
-    <item objectid=""1"" />
-  </build>
+  <build />
 </model>
 ", model);
         }
@@ -118,6 +116,54 @@ namespace IxMilia.ThreeMf.Test
 <model unit=""millimeter"" requiredextensions=""a"" xmlns:a=""http://www.ixmilia.com"">
   <resources />
   <build />
+</model>
+", model);
+        }
+
+        [Fact]
+        public void WriteBuildItemTest()
+        {
+            var model = new ThreeMfModel();
+            var obj = new ThreeMfObject();
+            model.Resources.Add(obj);
+            model.Items.Add(new ThreeMfModelItem(obj) { PartNumber = "part number" });
+            VerifyModelXml(@"
+<model unit=""millimeter"">
+  <resources>
+    <object id=""1"" type=""model"">
+      <mesh>
+        <vertices />
+        <triangles />
+      </mesh>
+    </object>
+  </resources>
+  <build>
+    <item objectid=""1"" partnumber=""part number"" />
+  </build>
+</model>
+", model);
+        }
+
+        [Fact]
+        public void WriteBuildItemWithTransformMatrixTest()
+        {
+            var model = new ThreeMfModel();
+            var obj = new ThreeMfObject();
+            model.Resources.Add(obj);
+            model.Items.Add(new ThreeMfModelItem(obj) { Transform = new ThreeMfMatrix(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0) });
+            VerifyModelXml(@"
+<model unit=""millimeter"">
+  <resources>
+    <object id=""1"" type=""model"">
+      <mesh>
+        <vertices />
+        <triangles />
+      </mesh>
+    </object>
+  </resources>
+  <build>
+    <item objectid=""1"" transform=""1 2 3 4 5 6 7 8 9 10 11 12"" />
+  </build>
 </model>
 ", model);
         }

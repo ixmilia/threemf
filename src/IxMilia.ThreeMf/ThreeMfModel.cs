@@ -20,7 +20,6 @@ namespace IxMilia.ThreeMf
         private const string Metadata_ModificationDate = "ModificationDate";
         private const string UnitAttributeName = "unit";
         private const string NameAttributeName = "name";
-        private const string ObjectIdAttributeName = "objectid";
         private const string RequiredExtensionsAttributeName = "requiredextensions";
         private const string DefaultLanguage = "en-US";
 
@@ -28,7 +27,7 @@ namespace IxMilia.ThreeMf
         private static XName BuildName = XName.Get("build", ModelNamespace);
         private static XName ResourcesName = XName.Get("resources", ModelNamespace);
         private static XName MetadataName = XName.Get("metadata", ModelNamespace);
-        private static XName ItemName = XName.Get("item", ModelNamespace);
+        
         private static XName XmlLanguageAttributeName = XNamespace.Xml + "lang";
 
         private static HashSet<string> KnownExtensionNamespaces = new HashSet<string>()
@@ -47,6 +46,7 @@ namespace IxMilia.ThreeMf
         public string ModificationDate { get; set; }
 
         public IList<ThreeMfResource> Resources { get; } = new List<ThreeMfResource>();
+        public IList<ThreeMfModelItem> Items { get; } = new List<ThreeMfModelItem>();
 
         public ThreeMfModel()
         {
@@ -112,24 +112,22 @@ namespace IxMilia.ThreeMf
             model.CreationDate = GetMetadataValue(root, Metadata_CreationDate);
             model.ModificationDate = GetMetadataValue(root, Metadata_ModificationDate);
 
-            model.ParseResources(root.Element(ResourcesName));
-
-            // TODO: <build>
+            var resourceMap = model.ParseResources(root.Element(ResourcesName));
+            model.ParseBuild(root.Element(BuildName), resourceMap);
 
             return model;
         }
 
         internal XElement ToXElement()
         {
+            var resourceMap = new Dictionary<ThreeMfResource, int>();
             for (int i = 0; i < Resources.Count; i++)
             {
                 Resources[i].Id = i + 1;
+                resourceMap.Add(Resources[i], Resources[i].Id);
             }
 
-            // TODO: handle multiple build items?
-            var primaryResource = Resources.OfType<ThreeMfObject>().FirstOrDefault();
             var modelXml = new XElement(ModelName);
-
             var requiredNamespaces = new List<Tuple<string, string>>();
             var currentNs = 'a';
             foreach (var ns in RequiredExtensionNamespaces.OrderBy(n => n))
@@ -137,6 +135,8 @@ namespace IxMilia.ThreeMf
                 requiredNamespaces.Add(Tuple.Create(ns, currentNs.ToString()));
                 currentNs++;
             }
+
+            // TODO: ensure build items are included in resources
 
             modelXml.Add(
                 new XAttribute(UnitAttributeName, ModelUnits.ToString().ToLowerInvariant()),
@@ -156,9 +156,7 @@ namespace IxMilia.ThreeMf
                 new XElement(ResourcesName,
                     Resources.Select(r => r.ToXElement())),
                 new XElement(BuildName,
-                    primaryResource == null
-                        ? null
-                        : new XElement(ItemName, new XAttribute(ObjectIdAttributeName, primaryResource.Id))));
+                    Items.Select(i => i.ToXElement(resourceMap))));
             return modelXml;
         }
 
@@ -169,11 +167,12 @@ namespace IxMilia.ThreeMf
                 : new XElement(MetadataName, new XAttribute(NameAttributeName, metadataType), value);
         }
 
-        private void ParseResources(XElement resources)
+        private Dictionary<int, ThreeMfResource> ParseResources(XElement resources)
         {
+            var resourceMap = new Dictionary<int, ThreeMfResource>();
             if (resources == null)
             {
-                return;
+                return resourceMap;
             }
 
             foreach (var element in resources.Elements())
@@ -182,6 +181,27 @@ namespace IxMilia.ThreeMf
                 if (resource != null)
                 {
                     Resources.Add(resource);
+                    resourceMap.Add(resource.Id, resource);
+                }
+            }
+
+            return resourceMap;
+        }
+
+        private void ParseBuild(XElement build, Dictionary<int, ThreeMfResource> resourceMap)
+        {
+            if (build == null)
+            {
+                // no build items specified
+                return;
+            }
+
+            foreach (var element in build.Elements())
+            {
+                var item = ThreeMfModelItem.ParseItem(element, resourceMap);
+                if (item != null)
+                {
+                    Items.Add(item);
                 }
             }
         }

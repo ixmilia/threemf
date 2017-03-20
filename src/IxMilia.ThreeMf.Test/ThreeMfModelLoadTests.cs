@@ -80,5 +80,48 @@ namespace IxMilia.ThreeMf.Test
             Assert.Equal(4, mesh.Triangles.Count);
             Assert.Equal(5.0, mesh.Triangles.First().V3.Z);
         }
+
+        [Fact]
+        public void ReadModelItemTest()
+        {
+            var model = FromContent(@"
+<resources>
+  <object id=""1"" partnumber=""object part number"">
+    <mesh>
+      <vertices />
+      <triangles />
+    </mesh>
+  </object>
+</resources>
+<build>
+  <item objectid=""1"" partnumber=""some part number"" />
+</build>
+");
+
+            Assert.Equal("object part number", ((ThreeMfObject)model.Resources.Single()).PartNumber);
+            Assert.Equal("some part number", model.Items.Single().PartNumber);
+            Assert.True(ReferenceEquals(model.Resources.Single(), model.Items.Single().Object));
+        }
+
+        [Fact]
+        public void ReadModelItemTransformMatrixTest()
+        {
+            var model = FromContent(@"
+<resources>
+  <object id=""1"">
+    <mesh>
+      <vertices />
+      <triangles />
+    </mesh>
+  </object>
+</resources>
+<build>
+  <item objectid=""1"" transform=""1 2 3 4 5 6 7 8 9 10 11 12"" />
+</build>
+");
+
+            var expected = new ThreeMfMatrix(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0);
+            Assert.Equal(expected, model.Items.Single().Transform);
+        }
     }
 }
