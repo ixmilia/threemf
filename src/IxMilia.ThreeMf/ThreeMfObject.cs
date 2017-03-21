@@ -25,15 +25,16 @@ namespace IxMilia.ThreeMf
         public ThreeMfObjectType Type { get; set; }
         public string PartNumber { get; set; }
         public string Name { get; set; }
+
+        private ThreeMfMesh _mesh;
+
         public ThreeMfMesh Mesh
         {
             get => _mesh;
-            set => _mesh = value ?? throw new ArgumentException(nameof(value));
+            set => _mesh = value ?? throw new ArgumentNullException(nameof(value));
         }
 
         public IList<ThreeMfComponent> Components { get; } = new List<ThreeMfComponent>();
-
-        private ThreeMfMesh _mesh;
 
         public ThreeMfObject()
         {

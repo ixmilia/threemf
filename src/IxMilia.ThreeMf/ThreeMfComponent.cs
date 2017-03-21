@@ -1,5 +1,6 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
@@ -12,7 +13,14 @@ namespace IxMilia.ThreeMf
 
         internal static XName ComponentName = XName.Get("component", ThreeMfModel.ModelNamespace);
 
-        public ThreeMfResource Object { get; set; }
+        private ThreeMfResource _obj;
+
+        public ThreeMfResource Object
+        {
+            get => _obj;
+            set => _obj = value ?? throw new ArgumentNullException(nameof(value));
+        }
+
         public ThreeMfMatrix Transform { get; set; }
 
         public ThreeMfComponent(ThreeMfResource obj, ThreeMfMatrix transform)
