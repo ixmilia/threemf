@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using IxMilia.ThreeMf.Collections;
 
 namespace IxMilia.ThreeMf
 {
@@ -41,7 +42,7 @@ namespace IxMilia.ThreeMf
             IndentChars = "  "
         };
 
-        public IList<ThreeMfModel> Models { get; } = new List<ThreeMfModel>();
+        public IList<ThreeMfModel> Models { get; } = new ListNonNull<ThreeMfModel>();
 
         public void Save(Stream stream)
         {

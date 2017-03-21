@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using IxMilia.ThreeMf.Collections;
 
 namespace IxMilia.ThreeMf
 {
@@ -45,8 +46,8 @@ namespace IxMilia.ThreeMf
         public string CreationDate { get; set; }
         public string ModificationDate { get; set; }
 
-        public IList<ThreeMfResource> Resources { get; } = new List<ThreeMfResource>();
-        public IList<ThreeMfModelItem> Items { get; } = new List<ThreeMfModelItem>();
+        public IList<ThreeMfResource> Resources { get; } = new ListNonNull<ThreeMfResource>();
+        public IList<ThreeMfModelItem> Items { get; } = new ListNonNull<ThreeMfModelItem>();
 
         public ThreeMfModel()
         {

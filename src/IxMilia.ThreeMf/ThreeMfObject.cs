@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using IxMilia.ThreeMf.Collections;
 
 namespace IxMilia.ThreeMf
 {
@@ -34,7 +35,7 @@ namespace IxMilia.ThreeMf
             set => _mesh = value ?? throw new ArgumentNullException(nameof(value));
         }
 
-        public IList<ThreeMfComponent> Components { get; } = new List<ThreeMfComponent>();
+        public IList<ThreeMfComponent> Components { get; } = new ListNonNull<ThreeMfComponent>();
 
         public ThreeMfObject()
         {
