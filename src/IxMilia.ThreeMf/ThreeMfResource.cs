@@ -1,6 +1,7 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace IxMilia.ThreeMf
@@ -12,7 +13,7 @@ namespace IxMilia.ThreeMf
 
         public int Id { get; internal set; }
 
-        abstract internal XElement ToXElement();
+        abstract internal XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap);
 
         internal static int ParseAttributeInt(XElement element, string attributeName, bool isRequired = false)
         {
@@ -30,11 +31,11 @@ namespace IxMilia.ThreeMf
             return value;
         }
 
-        internal static ThreeMfResource ParseResource(XElement element)
+        internal static ThreeMfResource ParseResource(XElement element, Dictionary<int, ThreeMfResource> resourceMap)
         {
             if (element.Name == ObjectName)
             {
-                return ThreeMfObject.ParseObject(element);
+                return ThreeMfObject.ParseObject(element, resourceMap);
             }
             else if (element.Name == BaseMaterialsName)
             {

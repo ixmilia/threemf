@@ -5,34 +5,37 @@ using System.Xml.Linq;
 
 namespace IxMilia.ThreeMf
 {
-    public class ThreeMfModelItem
+    public class ThreeMfComponent
     {
         private const string ObjectIdAttributeName = "objectid";
-        private const string PartNumberAttributeName = "partnumber";
+        private const string TransformAttributeName = "transform";
 
-        private static XName ItemName = XName.Get("item", ThreeMfModel.ModelNamespace);
+        internal static XName ComponentName = XName.Get("component", ThreeMfModel.ModelNamespace);
 
         public ThreeMfResource Object { get; set; }
         public ThreeMfMatrix Transform { get; set; }
-        public string PartNumber { get; set; }
 
-        public ThreeMfModelItem(ThreeMfResource obj)
+        public ThreeMfComponent(ThreeMfResource obj, ThreeMfMatrix transform)
         {
             Object = obj;
-            Transform = ThreeMfMatrix.Identity;
+            Transform = transform;
         }
 
         internal XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap)
         {
             var objectId = resourceMap[Object];
-            return new XElement(ItemName,
+            return new XElement(ComponentName,
                 new XAttribute(ObjectIdAttributeName, objectId),
-                Transform.ToXAttribute(),
-                string.IsNullOrEmpty(PartNumber) ? null : new XAttribute(PartNumberAttributeName, PartNumber));
+                Transform.ToXAttribute());
         }
 
-        internal static ThreeMfModelItem ParseItem(XElement element, Dictionary<int, ThreeMfResource> resourceMap)
+        internal static ThreeMfComponent ParseComponent(XElement element, Dictionary<int, ThreeMfResource> resourceMap)
         {
+            if (element == null)
+            {
+                return null;
+            }
+
             var objectIdAttribute = element.Attribute(ObjectIdAttributeName);
             if (objectIdAttribute == null)
             {
@@ -45,10 +48,9 @@ namespace IxMilia.ThreeMf
                 throw new ThreeMfParseException($"Invalid object id {objectId}.");
             }
 
-            var modelItem = new ThreeMfModelItem(resourceMap[objectId]);
-            modelItem.Transform = ThreeMfMatrix.ParseMatrix(element.Attribute(ThreeMfMatrix.TransformAttributeName));
-            modelItem.PartNumber = element.Attribute(PartNumberAttributeName)?.Value;
-            return modelItem;
+            var obj = resourceMap[objectId];
+            var transform = ThreeMfMatrix.ParseMatrix(element.Attribute(ThreeMfMatrix.TransformAttributeName));
+            return new ThreeMfComponent(obj, transform);
         }
     }
 }

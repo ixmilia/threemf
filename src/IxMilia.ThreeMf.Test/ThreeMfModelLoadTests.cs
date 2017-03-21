@@ -123,5 +123,39 @@ namespace IxMilia.ThreeMf.Test
             var expected = new ThreeMfMatrix(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0);
             Assert.Equal(expected, model.Items.Single().Transform);
         }
+
+        [Fact]
+        public void ReadModelComponentsTest()
+        {
+            var model = FromContent(@"
+<resources>
+  <object id=""1"" name=""first"">
+    <mesh>
+      <vertices />
+      <triangles />
+    </mesh>
+  </object>
+  <object id=""2"" name=""second"">
+    <mesh>
+      <vertices />
+      <triangles />
+    </mesh>
+    <components>
+      <component objectid=""1"" transform=""1 2 3 4 5 6 7 8 9 10 11 12"" />
+    </components>
+  </object>
+</resources>
+");
+
+            Assert.Equal(2, model.Resources.Count);
+            var first = (ThreeMfObject)(model.Resources.First());
+            var second = (ThreeMfObject)(model.Resources.Last());
+            Assert.Equal("first", first.Name);
+            Assert.Equal("second", second.Name);
+
+            var expected = new ThreeMfMatrix(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0);
+            Assert.True(ReferenceEquals(first, second.Components.Single().Object));
+            Assert.Equal(expected, second.Components.Single().Transform);
+        }
     }
 }

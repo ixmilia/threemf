@@ -167,5 +167,40 @@ namespace IxMilia.ThreeMf.Test
 </model>
 ", model);
         }
+
+        [Fact]
+        public void WriteComponentTest()
+        {
+            var model = new ThreeMfModel();
+            var first = new ThreeMfObject();
+            first.Name = "first";
+            model.Resources.Add(first);
+            var second = new ThreeMfObject();
+            second.Name = "second";
+            second.Components.Add(new ThreeMfComponent(first, new ThreeMfMatrix(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0)));
+            model.Resources.Add(second);
+            VerifyModelXml(@"
+<model unit=""millimeter"">
+  <resources>
+    <object id=""1"" type=""model"" name=""first"">
+      <mesh>
+        <vertices />
+        <triangles />
+      </mesh>
+    </object>
+    <object id=""2"" type=""model"" name=""second"">
+      <mesh>
+        <vertices />
+        <triangles />
+      </mesh>
+      <components>
+        <component objectid=""1"" transform=""1 2 3 4 5 6 7 8 9 10 11 12"" />
+      </components>
+    </object>
+  </resources>
+  <build />
+</model>
+", model);
+        }
     }
 }

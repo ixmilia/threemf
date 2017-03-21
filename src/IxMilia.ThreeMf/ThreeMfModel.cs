@@ -154,7 +154,7 @@ namespace IxMilia.ThreeMf
                 GetMetadataXElement(Metadata_CreationDate, CreationDate),
                 GetMetadataXElement(Metadata_ModificationDate, ModificationDate),
                 new XElement(ResourcesName,
-                    Resources.Select(r => r.ToXElement())),
+                    Resources.Select(r => r.ToXElement(resourceMap))),
                 new XElement(BuildName,
                     Items.Select(i => i.ToXElement(resourceMap))));
             return modelXml;
@@ -177,7 +177,7 @@ namespace IxMilia.ThreeMf
 
             foreach (var element in resources.Elements())
             {
-                var resource = ThreeMfResource.ParseResource(element);
+                var resource = ThreeMfResource.ParseResource(element, resourceMap);
                 if (resource != null)
                 {
                     Resources.Add(resource);

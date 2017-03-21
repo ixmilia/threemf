@@ -1,6 +1,8 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace IxMilia.ThreeMf
@@ -13,6 +15,7 @@ namespace IxMilia.ThreeMf
         private const string TypeAttributeName = "type";
 
         internal static XName MeshName = XName.Get("mesh", ThreeMfModel.ModelNamespace);
+        internal static XName ComponentsName = XName.Get("components", ThreeMfModel.ModelNamespace);
 
         // TODO:
         //   pid = reference to property group element with matching id attribute.  required if pindex is specified
@@ -29,6 +32,8 @@ namespace IxMilia.ThreeMf
             set => _mesh = value ?? throw new ArgumentException(nameof(value));
         }
 
+        public IList<ThreeMfComponent> Components { get; } = new List<ThreeMfComponent>();
+
         private ThreeMfMesh _mesh;
 
         public ThreeMfObject()
@@ -37,17 +42,18 @@ namespace IxMilia.ThreeMf
             Mesh = new ThreeMfMesh();
         }
 
-        internal override XElement ToXElement()
+        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap)
         {
             return new XElement(ObjectName,
                 new XAttribute(IdAttributeName, Id),
                 new XAttribute(TypeAttributeName, Type.ToString().ToLowerInvariant()),
-                PartNumber == null ? null : new XElement(PartNumberAttributeName, PartNumber),
-                Name == null ? null : new XElement(NameAttributeName, Name),
-                Mesh.ToXElement());
+                PartNumber == null ? null : new XAttribute(PartNumberAttributeName, PartNumber),
+                Name == null ? null : new XAttribute(NameAttributeName, Name),
+                Mesh.ToXElement(),
+                Components.Count == 0 ? null : new XElement(ComponentsName, Components.Select(c => c.ToXElement(resourceMap))));
         }
 
-        internal static ThreeMfObject ParseObject(XElement element)
+        internal static ThreeMfObject ParseObject(XElement element, Dictionary<int, ThreeMfResource> resourceMap)
         {
             var obj = new ThreeMfObject();
             obj.Id = ParseAttributeInt(element, IdAttributeName, isRequired: true);
@@ -55,6 +61,16 @@ namespace IxMilia.ThreeMf
             obj.PartNumber = element.Attribute(PartNumberAttributeName)?.Value;
             obj.Name = element.Attribute(NameAttributeName)?.Value;
             obj.Mesh = ThreeMfMesh.ParseMesh(element.Element(MeshName));
+            var components = element.Element(ComponentsName);
+            if (components != null)
+            {
+                foreach (var componentElement in components.Elements())
+                {
+                    var component = ThreeMfComponent.ParseComponent(componentElement, resourceMap);
+                    obj.Components.Add(component);
+                }
+            }
+
             return obj;
         }
 
