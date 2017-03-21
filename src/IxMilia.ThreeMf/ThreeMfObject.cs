@@ -21,7 +21,6 @@ namespace IxMilia.ThreeMf
         //   pid = reference to property group element with matching id attribute.  required if pindex is specified
         //   pindex = a zero-based index into the properties group specified by pid.  this is used to build the object
         //   thumbnail = path to a 3d texture of jpeg or png that represents a rendered image of the object
-        //   components
 
         public ThreeMfObjectType Type { get; set; }
         public string PartNumber { get; set; }

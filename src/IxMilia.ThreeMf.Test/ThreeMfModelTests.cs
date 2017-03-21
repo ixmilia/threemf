@@ -202,5 +202,44 @@ namespace IxMilia.ThreeMf.Test
 </model>
 ", model);
         }
+
+        [Fact]
+        public void IncludeAllResourcesTest()
+        {
+            // ensure that improperly built models still write out all resources
+            var model = new ThreeMfModel();
+            var obj = new ThreeMfObject() { Name = "build item" };
+            obj.Components.Add(new ThreeMfComponent(new ThreeMfObject() { Name = "component" }, ThreeMfMatrix.Identity));
+            model.Items.Add(new ThreeMfModelItem(obj));
+
+            // note that as of here, no objects have ever been added to `model.Resources`
+            Assert.Equal(0, model.Resources.Count);
+
+            // but calling `.ToXElement()` will force it to be populated appropriately
+            VerifyModelXml(@"
+<model unit=""millimeter"">
+  <resources>
+    <object id=""1"" type=""model"" name=""component"">
+      <mesh>
+        <vertices />
+        <triangles />
+      </mesh>
+    </object>
+    <object id=""2"" type=""model"" name=""build item"">
+      <mesh>
+        <vertices />
+        <triangles />
+      </mesh>
+      <components>
+        <component objectid=""1"" />
+      </components>
+    </object>
+  </resources>
+  <build>
+    <item objectid=""2"" />
+  </build>
+</model>
+", model);
+        }
     }
 }

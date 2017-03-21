@@ -120,6 +120,30 @@ namespace IxMilia.ThreeMf
 
         internal XElement ToXElement()
         {
+            // ensure build items are included
+            var resourcesHash = new HashSet<ThreeMfResource>(Resources);
+            foreach (var item in Items)
+            {
+                if (resourcesHash.Add(item.Object))
+                {
+                    Resources.Add(item.Object);
+                }
+            }
+
+            // ensure components are included
+            var objects = Resources.OfType<ThreeMfObject>().ToList();
+            foreach (var resource in objects)
+            {
+                foreach (var component in resource.Components)
+                {
+                    if (resourcesHash.Add(component.Object))
+                    {
+                        // components must be defined ahead of their reference
+                        Resources.Insert(0, component.Object);
+                    }
+                }
+            }
+
             var resourceMap = new Dictionary<ThreeMfResource, int>();
             for (int i = 0; i < Resources.Count; i++)
             {
@@ -135,8 +159,6 @@ namespace IxMilia.ThreeMf
                 requiredNamespaces.Add(Tuple.Create(ns, currentNs.ToString()));
                 currentNs++;
             }
-
-            // TODO: ensure build items are included in resources
 
             modelXml.Add(
                 new XAttribute(UnitAttributeName, ModelUnits.ToString().ToLowerInvariant()),
