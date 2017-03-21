@@ -62,9 +62,12 @@ namespace IxMilia.ThreeMf.Test
         {
             var model = new ThreeMfModel();
             model.Title = "some title";
+            model.Description = "line 1\nline 2";
             VerifyModelXml(@"
 <model unit=""millimeter"">
   <metadata name=""Title"">some title</metadata>
+  <metadata name=""Description"">line 1</metadata>
+  <metadata name=""Description"">line 2</metadata>
   <resources />
   <build />
 </model>

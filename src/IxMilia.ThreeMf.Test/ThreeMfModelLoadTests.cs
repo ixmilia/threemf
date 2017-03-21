@@ -44,9 +44,12 @@ namespace IxMilia.ThreeMf.Test
         {
             var model = FromContent(@"
 <metadata name=""Title"">some title</metadata>
+<metadata name=""Description"">line 1</metadata>
+<metadata name=""Description"">line 2</metadata>
 ");
             Assert.Equal("some title", model.Title);
-            Assert.Null(model.Description);
+            Assert.Equal("line 1\r\nline 2", model.Description);
+            Assert.Null(model.Copyright);
         }
 
         [Fact]

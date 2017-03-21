@@ -168,14 +168,14 @@ namespace IxMilia.ThreeMf
                     : new XAttribute(RequiredExtensionsAttributeName, string.Join(" ", requiredNamespaces.Select(rns => rns.Item2))),
                 new XAttribute(XmlLanguageAttributeName, DefaultLanguage),
                 requiredNamespaces.Select(rns => new XAttribute(XNamespace.Xmlns + rns.Item2, rns.Item1)),
-                GetMetadataXElement(Metadata_Title, Title),
-                GetMetadataXElement(Metadata_Designer, Designer),
-                GetMetadataXElement(Metadata_Description, Description),
-                GetMetadataXElement(Metadata_Copyright, Copyright),
-                GetMetadataXElement(Metadata_LicenseTerms, LicenseTerms),
-                GetMetadataXElement(Metadata_Rating, Rating),
-                GetMetadataXElement(Metadata_CreationDate, CreationDate),
-                GetMetadataXElement(Metadata_ModificationDate, ModificationDate),
+                GetMetadataXElements(Metadata_Title, Title),
+                GetMetadataXElements(Metadata_Designer, Designer),
+                GetMetadataXElements(Metadata_Description, Description),
+                GetMetadataXElements(Metadata_Copyright, Copyright),
+                GetMetadataXElements(Metadata_LicenseTerms, LicenseTerms),
+                GetMetadataXElements(Metadata_Rating, Rating),
+                GetMetadataXElements(Metadata_CreationDate, CreationDate),
+                GetMetadataXElements(Metadata_ModificationDate, ModificationDate),
                 new XElement(ResourcesName,
                     Resources.Select(r => r.ToXElement(resourceMap))),
                 new XElement(BuildName,
@@ -183,11 +183,13 @@ namespace IxMilia.ThreeMf
             return modelXml;
         }
 
-        private XElement GetMetadataXElement(string metadataType, string value)
+        private IEnumerable<XElement> GetMetadataXElements(string metadataType, string value)
         {
             return string.IsNullOrEmpty(value)
                 ? null
-                : new XElement(MetadataName, new XAttribute(NameAttributeName, metadataType), value);
+                : value.Split('\n')
+                    .Select(l => l.TrimEnd('\r'))
+                    .Select(l => new XElement(MetadataName, new XAttribute(NameAttributeName, metadataType), l));
         }
 
         private Dictionary<int, ThreeMfResource> ParseResources(XElement resources)
@@ -231,7 +233,10 @@ namespace IxMilia.ThreeMf
 
         private static string GetMetadataValue(XElement root, string name)
         {
-            return root.Elements(MetadataName)?.Where(e => e.Attribute(NameAttributeName)?.Value == name).SingleOrDefault()?.Value;
+            var attributes = root.Elements(MetadataName)?.Where(e => e.Attribute(NameAttributeName)?.Value == name).ToList();
+            return attributes.Count == 0
+                ? null
+                : string.Join("\r\n", attributes.Select(a => a.Value));
         }
     }
 }
