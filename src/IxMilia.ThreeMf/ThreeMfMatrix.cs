@@ -63,6 +63,19 @@ namespace IxMilia.ThreeMf
             M32 = m32;
         }
 
+        public ThreeMfVertex Transform(ThreeMfVertex v)
+        {
+            //                       [ M00 M01 M02 0.0 ]
+            // [ v.X v.Y v.Z 1.0 ] * [ M10 M11 M12 0.0 ]
+            //                       [ M20 M21 M22 0.0 ]
+            //                       [ M30 M31 M32 1.0 ]
+
+            var x = v.X * M00 + v.Y * M10 + v.Z * M20 + M30;
+            var y = v.Y * M01 + v.Y * M11 + v.Z * M21 + M31;
+            var z = v.Z * M02 + v.Y * M12 + v.Z * M22 + M32;
+            return new ThreeMfVertex(x, y, z);
+        }
+
         internal XAttribute ToXAttribute()
         {
             if (IsIdentity)
