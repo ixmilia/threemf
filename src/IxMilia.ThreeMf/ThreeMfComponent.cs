@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using IxMilia.ThreeMf.Extensions;
 
 namespace IxMilia.ThreeMf
 {
@@ -44,14 +45,8 @@ namespace IxMilia.ThreeMf
                 return null;
             }
 
-            var objectIdAttribute = element.Attribute(ObjectIdAttributeName);
-            if (objectIdAttribute == null)
-            {
-                throw new ThreeMfParseException("Expected object id.");
-            }
-
-            var objectId = int.Parse(objectIdAttribute.Value);
-            if (!resourceMap.ContainsKey(objectId))
+            if (!int.TryParse(element.AttributeValueOrThrow(ObjectIdAttributeName), out var objectId) &&
+                !resourceMap.ContainsKey(objectId))
             {
                 throw new ThreeMfParseException($"Invalid object id {objectId}.");
             }

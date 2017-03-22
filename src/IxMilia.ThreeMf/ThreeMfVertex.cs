@@ -1,6 +1,7 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Xml.Linq;
+using IxMilia.ThreeMf.Extensions;
 
 namespace IxMilia.ThreeMf
 {
@@ -62,26 +63,10 @@ namespace IxMilia.ThreeMf
 
         internal static ThreeMfVertex ParseVertex(XElement element)
         {
-            var x = ParseDouble(element, XAttributeName);
-            var y = ParseDouble(element, YAttributeName);
-            var z = ParseDouble(element, ZAttributeName);
+            var x = element.AttributeDoubleValueOrThrow(XAttributeName);
+            var y = element.AttributeDoubleValueOrThrow(YAttributeName);
+            var z = element.AttributeDoubleValueOrThrow(ZAttributeName);
             return new ThreeMfVertex(x, y, z);
-        }
-
-        private static double ParseDouble(XElement element, string attributeName)
-        {
-            var att = element.Attribute(attributeName);
-            if (att == null)
-            {
-                throw new ThreeMfParseException($"Missing required attribute '{attributeName}'.");
-            }
-
-            if (!double.TryParse(att.Value, out var value))
-            {
-                throw new ThreeMfParseException($"Unable to parse '{att.Value}' as a double.");
-            }
-
-            return value;
         }
     }
 }

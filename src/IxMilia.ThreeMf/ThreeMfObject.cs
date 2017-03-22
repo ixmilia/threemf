@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using IxMilia.ThreeMf.Collections;
+using IxMilia.ThreeMf.Extensions;
 
 namespace IxMilia.ThreeMf
 {
@@ -56,7 +57,7 @@ namespace IxMilia.ThreeMf
         internal static ThreeMfObject ParseObject(XElement element, Dictionary<int, ThreeMfResource> resourceMap)
         {
             var obj = new ThreeMfObject();
-            obj.Id = ParseAttributeInt(element, IdAttributeName, isRequired: true);
+            obj.Id = element.AttributeIntValueOrThrow(IdAttributeName);
             obj.Type = ParseObjectType(element.Attribute(TypeAttributeName)?.Value);
             obj.PartNumber = element.Attribute(PartNumberAttributeName)?.Value;
             obj.Name = element.Attribute(NameAttributeName)?.Value;

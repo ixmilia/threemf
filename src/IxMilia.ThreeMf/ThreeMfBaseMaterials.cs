@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using IxMilia.ThreeMf.Collections;
+using IxMilia.ThreeMf.Extensions;
 
 namespace IxMilia.ThreeMf
 {
@@ -21,7 +22,7 @@ namespace IxMilia.ThreeMf
         internal static ThreeMfBaseMaterials ParseBaseMaterials(XElement element)
         {
             var baseMaterials = new ThreeMfBaseMaterials();
-            baseMaterials.Id = ParseAttributeInt(element, IdAttributeName, isRequired: true);
+            baseMaterials.Id = element.AttributeIntValueOrThrow(IdAttributeName);
             foreach (var baseElement in element.Elements(ThreeMfBase.BaseName))
             {
                 var baseMaterial = ThreeMfBase.ParseBaseMaterial(baseElement);

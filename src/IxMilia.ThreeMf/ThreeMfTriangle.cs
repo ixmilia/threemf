@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using System.Xml.Linq;
+using IxMilia.ThreeMf.Extensions;
 
 namespace IxMilia.ThreeMf
 {
@@ -45,9 +46,9 @@ namespace IxMilia.ThreeMf
 
         internal static ThreeMfTriangle ParseTriangle(XElement triangleElement, IList<ThreeMfVertex> vertices)
         {
-            var v1Index = ThreeMfResource.ParseAttributeInt(triangleElement, V1AttributeName, isRequired: true);
-            var v2Index = ThreeMfResource.ParseAttributeInt(triangleElement, V2AttributeName, isRequired: true);
-            var v3Index = ThreeMfResource.ParseAttributeInt(triangleElement, V3AttributeName, isRequired: true);
+            var v1Index = triangleElement.AttributeIntValueOrThrow(V1AttributeName);
+            var v2Index = triangleElement.AttributeIntValueOrThrow(V2AttributeName);
+            var v3Index = triangleElement.AttributeIntValueOrThrow(V3AttributeName);
 
             if (v1Index == v2Index || v1Index == v3Index || v2Index == v3Index)
             {

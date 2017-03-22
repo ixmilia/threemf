@@ -1,6 +1,7 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Xml.Linq;
+using IxMilia.ThreeMf.Extensions;
 
 namespace IxMilia.ThreeMf
 {
@@ -29,19 +30,9 @@ namespace IxMilia.ThreeMf
 
         internal static ThreeMfBase ParseBaseMaterial(XElement baseElement)
         {
-            var nameAttribute = baseElement.Attribute(NameAttributeName);
-            if (nameAttribute == null)
-            {
-                throw new ThreeMfParseException($"Expected attribute '{NameAttributeName}'.");
-            }
-
-            var colorAttribute = baseElement.Attribute(DisplayColorAttributeName);
-            if (colorAttribute == null)
-            {
-                throw new ThreeMfParseException($"Expected attribute '{DisplayColorAttributeName}'.");
-            }
-
-            return new ThreeMfBase(nameAttribute.Value, ThreeMfsRGBColor.Parse(colorAttribute.Value));
+            var name = baseElement.AttributeValueOrThrow(NameAttributeName);
+            var color = ThreeMfsRGBColor.Parse(baseElement.AttributeValueOrThrow(DisplayColorAttributeName));
+            return new ThreeMfBase(name, color);
         }
     }
 }

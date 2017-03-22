@@ -8,6 +8,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using IxMilia.ThreeMf.Collections;
+using IxMilia.ThreeMf.Extensions;
 
 namespace IxMilia.ThreeMf
 {
@@ -125,12 +126,7 @@ namespace IxMilia.ThreeMf
                     throw new ThreeMfPackageException("Package does not contain a root 3MF relation.");
                 }
 
-                var target = firstRelationship.Attribute(TargetAttributeName)?.Value;
-                if (target == null)
-                {
-                    throw new ThreeMfPackageException("Relationship target not specified.");
-                }
-
+                var target = firstRelationship.AttributeValueOrThrow(TargetAttributeName, "Relationship target not specified.");
                 if (target.StartsWith("/"))
                 {
                     // ZipArchive doesn't like the leading slash

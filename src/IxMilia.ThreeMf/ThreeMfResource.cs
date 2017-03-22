@@ -16,22 +16,6 @@ namespace IxMilia.ThreeMf
 
         abstract internal XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap);
 
-        internal static int ParseAttributeInt(XElement element, string attributeName, bool isRequired = false)
-        {
-            var att = element.Attribute(attributeName);
-            if (isRequired && att == null)
-            {
-                throw new ThreeMfParseException($"Missing required attribute '{attributeName}'.");
-            }
-
-            if (!int.TryParse(att.Value, out var value))
-            {
-                throw new ThreeMfParseException($"Unable to parse '{att.Value}' as an int.");
-            }
-
-            return value;
-        }
-
         internal static ThreeMfResource ParseResource(XElement element, Dictionary<int, ThreeMfResource> resourceMap)
         {
             if (element.Name == ObjectName)
