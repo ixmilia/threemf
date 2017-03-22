@@ -244,5 +244,26 @@ namespace IxMilia.ThreeMf.Test
 </model>
 ", model);
         }
+
+        [Fact]
+        public void WriteBaseMaterialsTest()
+        {
+            var model = new ThreeMfModel();
+            var baseMaterials = new ThreeMfBaseMaterials();
+            baseMaterials.Bases.Add(new ThreeMfBase("blue", new ThreeMfsRGBColor(0, 0, 255)));
+            baseMaterials.Bases.Add(new ThreeMfBase("green no alpha", new ThreeMfsRGBColor(0, 255, 0, 0)));
+            model.Resources.Add(baseMaterials);
+            VerifyModelXml(@"
+<model unit=""millimeter"">
+  <resources>
+    <basematerials id=""1"">
+      <base name=""blue"" displaycolor=""#0000FFFF"" />
+      <base name=""green no alpha"" displaycolor=""#00FF0000"" />
+    </basematerials>
+  </resources>
+  <build />
+</model>
+", model);
+        }
     }
 }

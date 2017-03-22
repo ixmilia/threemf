@@ -10,7 +10,6 @@ namespace IxMilia.ThreeMf
 {
     public class ThreeMfObject : ThreeMfResource
     {
-        private const string IdAttributeName = "id";
         private const string NameAttributeName = "name";
         private const string PartNumberAttributeName = "partnumber";
         private const string TypeAttributeName = "type";

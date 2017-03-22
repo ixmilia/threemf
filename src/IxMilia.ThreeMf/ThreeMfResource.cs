@@ -7,6 +7,8 @@ namespace IxMilia.ThreeMf
 {
     public abstract class ThreeMfResource
     {
+        protected const string IdAttributeName = "id";
+
         protected static XName ObjectName = XName.Get("object", ThreeMfModel.ModelNamespace);
         protected static XName BaseMaterialsName = XName.Get("basematerials", ThreeMfModel.ModelNamespace);
 
@@ -38,8 +40,7 @@ namespace IxMilia.ThreeMf
             }
             else if (element.Name == BaseMaterialsName)
             {
-                // NYI
-                return null;
+                return ThreeMfBaseMaterials.ParseBaseMaterials(element);
             }
             else
             {

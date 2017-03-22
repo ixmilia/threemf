@@ -160,5 +160,27 @@ namespace IxMilia.ThreeMf.Test
             Assert.True(ReferenceEquals(first, second.Components.Single().Object));
             Assert.Equal(expected, second.Components.Single().Transform);
         }
+
+        [Fact]
+        public void ReadBaseMaterialsTest()
+        {
+            var model = FromContent(@"
+<resources>
+  <basematerials id=""1"">
+    <base name=""blue"" displaycolor=""#0000FF00"" />
+    <base name=""green no alpha"" displaycolor=""#00FF00"" />
+  </basematerials>
+</resources>
+");
+
+            var baseMaterials = (ThreeMfBaseMaterials)model.Resources.Single();
+            Assert.Equal(2, baseMaterials.Bases.Count);
+
+            Assert.Equal("blue", baseMaterials.Bases.First().Name);
+            Assert.Equal(new ThreeMfsRGBColor(0, 0, 255, 0), baseMaterials.Bases.First().Color);
+
+            Assert.Equal("green no alpha", baseMaterials.Bases.Last().Name);
+            Assert.Equal(new ThreeMfsRGBColor(0, 255, 0), baseMaterials.Bases.Last().Color);
+        }
     }
 }
