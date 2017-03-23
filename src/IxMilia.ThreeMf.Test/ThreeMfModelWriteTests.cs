@@ -6,7 +6,7 @@ using Xunit;
 
 namespace IxMilia.ThreeMf.Test
 {
-    public class ThreeMfModelTests
+    public class ThreeMfModelWriteTests
     {
         private string StripXmlns(string value)
         {
