@@ -144,6 +144,12 @@ namespace IxMilia.ThreeMf
                     }
                 }
 
+                if (obj.PropertyResource != null && resourcesHash.Add((ThreeMfResource)obj.PropertyResource))
+                {
+                    // property resources must be defined ahead of their reference
+                    Resources.Insert(0, (ThreeMfResource)obj.PropertyResource);
+                }
+
                 foreach (var triangle in obj.Mesh.Triangles)
                 {
                     if (triangle.PropertyResource != null && resourcesHash.Add((ThreeMfResource)triangle.PropertyResource))

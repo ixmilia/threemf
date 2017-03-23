@@ -242,5 +242,49 @@ namespace IxMilia.ThreeMf.Test
             var triangle = ((ThreeMfObject)model.Resources.Last()).Mesh.Triangles.Single();
             Assert.Null(triangle.PropertyResource);
         }
+
+        [Fact]
+        public void ReadObjectPropertiesTest()
+        {
+            var model = FromContent(@"
+<resources>
+  <basematerials id=""1"">
+    <base name=""white"" displaycolor=""#FFFFFF"" />
+  </basematerials>
+  <object id=""2"" pid=""1"" pindex=""0"">
+    <mesh>
+      <vertices />
+      <triangles />
+    </mesh>
+  </object>
+</resources>
+");
+
+            var obj = (ThreeMfObject)model.Resources.Last();
+            var propertyResource = obj.PropertyResource;
+            Assert.Equal("white", ((ThreeMfBase)propertyResource.PropertyItems.First()).Name);
+            Assert.Equal(0, obj.PropertyIndex);
+        }
+
+        [Fact]
+        public void ReadObjectPropertiesFromUnsupportedResourceTest()
+        {
+            var model = ParseXml($@"
+<model xmlns=""{ThreeMfModel.ModelNamespace}"" xmlns:x=""http://www.ixmilia.com"">
+  <resources>
+    <x:unsupported id=""1"" />
+    <object id=""2"" pid=""1"" pindex=""0"">
+      <mesh>
+      <vertices />
+      <triangles />
+    </mesh>
+    </object>
+  </resources>
+</model>
+");
+
+            var obj = (ThreeMfObject)model.Resources.Last();
+            Assert.Null(obj.PropertyResource);
+        }
     }
 }

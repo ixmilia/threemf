@@ -306,5 +306,35 @@ namespace IxMilia.ThreeMf.Test
 </model>
 ", model);
         }
+
+        [Fact]
+        public void WriteObjectPropertiesTest()
+        {
+            var model = new ThreeMfModel();
+            var obj = new ThreeMfObject();
+            var baseMaterials = new ThreeMfBaseMaterials();
+            baseMaterials.Bases.Add(new ThreeMfBase("blue", new ThreeMfsRGBColor(0, 0, 255)));
+            obj.PropertyResource = baseMaterials;
+            obj.PropertyIndex = 0;
+            model.Resources.Add(obj);
+
+            // `baseMaterials` was never added to the model resources; ensure it is when writing
+            VerifyModelXml(@"
+<model>
+  <resources>
+    <basematerials id=""1"">
+      <base name=""blue"" displaycolor=""#0000FFFF"" />
+    </basematerials>
+    <object id=""2"" type=""model"" pid=""1"" pindex=""0"">
+      <mesh>
+        <vertices />
+        <triangles />
+      </mesh>
+    </object>
+  </resources>
+  <build />
+</model>
+", model);
+        }
     }
 }

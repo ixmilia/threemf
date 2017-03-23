@@ -13,17 +13,19 @@ namespace IxMilia.ThreeMf
     {
         private const string NameAttributeName = "name";
         private const string PartNumberAttributeName = "partnumber";
+        private const string PropertyReferenceAttributeName = "pid";
+        private const string PropertyIndexAttributeName = "pindex";
         private const string TypeAttributeName = "type";
 
         internal static XName MeshName = XName.Get("mesh", ThreeMfModel.ModelNamespace);
         internal static XName ComponentsName = XName.Get("components", ThreeMfModel.ModelNamespace);
 
-        // TODO:
-        //   pid = reference to property group element with matching id attribute.  required if pindex is specified
-        //   pindex = a zero-based index into the properties group specified by pid.  this is used to build the object
+        // TODO: page 25
         //   thumbnail = path to a 3d texture of jpeg or png that represents a rendered image of the object
 
         public ThreeMfObjectType Type { get; set; }
+        public IThreeMfPropertyResource PropertyResource { get; set; }
+        public int PropertyIndex { get; set; }
         public string PartNumber { get; set; }
         public string Name { get; set; }
 
@@ -48,6 +50,13 @@ namespace IxMilia.ThreeMf
             return new XElement(ObjectName,
                 new XAttribute(IdAttributeName, Id),
                 new XAttribute(TypeAttributeName, Type.ToString().ToLowerInvariant()),
+                PropertyResource == null
+                    ? null
+                    : new[]
+                    {
+                        new XAttribute(PropertyReferenceAttributeName, resourceMap[(ThreeMfResource)PropertyResource]),
+                        new XAttribute(PropertyIndexAttributeName, PropertyIndex)
+                    },
                 PartNumber == null ? null : new XAttribute(PartNumberAttributeName, PartNumber),
                 Name == null ? null : new XAttribute(NameAttributeName, Name),
                 Mesh.ToXElement(resourceMap),
@@ -69,6 +78,45 @@ namespace IxMilia.ThreeMf
                 {
                     var component = ThreeMfComponent.ParseComponent(componentElement, resourceMap);
                     obj.Components.Add(component);
+                }
+            }
+
+            var propertyReferenceAttribute = element.Attribute(PropertyReferenceAttributeName);
+            if (propertyReferenceAttribute != null)
+            {
+                if (!int.TryParse(propertyReferenceAttribute.Value, out var propertyIndex))
+                {
+                    throw new ThreeMfParseException($"Property index '{propertyReferenceAttribute.Value}' is not an int.");
+                }
+
+                if (resourceMap.ContainsKey(propertyIndex))
+                {
+                    var propertyResource = resourceMap[propertyIndex] as IThreeMfPropertyResource;
+                    if (propertyResource == null)
+                    {
+                        throw new ThreeMfParseException($"{nameof(PropertyResource)} was expected to be of type {nameof(IThreeMfPropertyResource)}.");
+                    }
+
+                    var propertyCount = propertyResource.PropertyItems.Count();
+                    var propertyIndexValue = element.AttributeIntValueOrThrow(PropertyIndexAttributeName);
+                    if (propertyIndexValue < 0 || propertyIndexValue >= propertyCount)
+                    {
+                        throw new ThreeMfParseException($"Property index is out of range.  Value must be [0, {propertyCount}).");
+                    }
+
+                    obj.PropertyResource = propertyResource;
+                    obj.PropertyIndex = propertyIndexValue;
+                }
+                else
+                {
+                    // could have been an unsupported resource type
+                }
+            }
+            else
+            {
+                if (element.Attribute(PropertyIndexAttributeName) != null)
+                {
+                    throw new ThreeMfParseException($"Attribute '{PropertyIndexAttributeName}' is only valid if '{PropertyReferenceAttributeName}' is also specified.");
                 }
             }
 
