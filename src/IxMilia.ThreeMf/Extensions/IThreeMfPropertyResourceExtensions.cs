@@ -1,6 +1,7 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -61,7 +62,16 @@ namespace IxMilia.ThreeMf.Extensions
 
         private static void ValidatePropertyIndex(this IThreeMfPropertyResource propertyResource, int index)
         {
-            var propertyCount = propertyResource.PropertyItems.Count();
+            var propertyCount =
+                (propertyResource.PropertyItems as IList<ThreeMfBase>)?.Count ??
+                (propertyResource.PropertyItems as IList<ThreeMfColor>)?.Count ??
+                -1;
+            if (propertyCount == -1)
+            {
+                Debug.Assert(false, "Unknown property item type.  Falling back to much slower .Count().");
+                propertyCount = propertyResource.PropertyItems.Count();
+            }
+
             if (index < 0 || index >= propertyCount)
             {
                 throw new ThreeMfParseException($"Property index is out of range.  Value must be [0, {propertyCount}).");
