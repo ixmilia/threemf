@@ -10,12 +10,16 @@ namespace IxMilia.ThreeMf.Test
     {
         private string StripXmlns(string value)
         {
+            // don't want to specify this in every test
             return value.Replace(" xmlns=\"" + ThreeMfModel.ModelNamespace + "\"", "");
         }
 
         private void VerifyModelXml(string xml, ThreeMfModel model)
         {
-            var actual = StripXmlns(model.ToXElement().ToString()).Replace(@" xml:lang=""en-US""", "");
+            // don't want to specify the defaults in every test
+            var actual = StripXmlns(model.ToXElement().ToString())
+                .Replace(@" xml:lang=""en-US""", "")
+                .Replace(@" unit=""millimeter""", "");
             Assert.Equal(xml.Trim(), actual);
         }
 
@@ -64,7 +68,7 @@ namespace IxMilia.ThreeMf.Test
             model.Title = "some title";
             model.Description = "line 1\nline 2";
             VerifyModelXml(@"
-<model unit=""millimeter"">
+<model>
   <metadata name=""Title"">some title</metadata>
   <metadata name=""Description"">line 1</metadata>
   <metadata name=""Description"">line 2</metadata>
@@ -116,7 +120,7 @@ namespace IxMilia.ThreeMf.Test
             var model = new ThreeMfModel();
             model.RequiredExtensionNamespaces.Add("http://www.ixmilia.com");
             VerifyModelXml(@"
-<model unit=""millimeter"" requiredextensions=""a"" xmlns:a=""http://www.ixmilia.com"">
+<model requiredextensions=""a"" xmlns:a=""http://www.ixmilia.com"">
   <resources />
   <build />
 </model>
@@ -131,7 +135,7 @@ namespace IxMilia.ThreeMf.Test
             model.Resources.Add(obj);
             model.Items.Add(new ThreeMfModelItem(obj) { PartNumber = "part number" });
             VerifyModelXml(@"
-<model unit=""millimeter"">
+<model>
   <resources>
     <object id=""1"" type=""model"">
       <mesh>
@@ -155,7 +159,7 @@ namespace IxMilia.ThreeMf.Test
             model.Resources.Add(obj);
             model.Items.Add(new ThreeMfModelItem(obj) { Transform = new ThreeMfMatrix(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0) });
             VerifyModelXml(@"
-<model unit=""millimeter"">
+<model>
   <resources>
     <object id=""1"" type=""model"">
       <mesh>
@@ -183,7 +187,7 @@ namespace IxMilia.ThreeMf.Test
             second.Components.Add(new ThreeMfComponent(first, new ThreeMfMatrix(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0)));
             model.Resources.Add(second);
             VerifyModelXml(@"
-<model unit=""millimeter"">
+<model>
   <resources>
     <object id=""1"" type=""model"" name=""first"">
       <mesh>
@@ -220,7 +224,7 @@ namespace IxMilia.ThreeMf.Test
 
             // but calling `.ToXElement()` will force it to be populated appropriately
             VerifyModelXml(@"
-<model unit=""millimeter"">
+<model>
   <resources>
     <object id=""1"" type=""model"" name=""component"">
       <mesh>
@@ -254,7 +258,7 @@ namespace IxMilia.ThreeMf.Test
             baseMaterials.Bases.Add(new ThreeMfBase("green no alpha", new ThreeMfsRGBColor(0, 255, 0, 0)));
             model.Resources.Add(baseMaterials);
             VerifyModelXml(@"
-<model unit=""millimeter"">
+<model>
   <resources>
     <basematerials id=""1"">
       <base name=""blue"" displaycolor=""#0000FFFF"" />
@@ -280,7 +284,7 @@ namespace IxMilia.ThreeMf.Test
 
             // `baseMaterials` was never added to the model resources; ensure it is when writing
             VerifyModelXml(@"
-<model unit=""millimeter"">
+<model>
   <resources>
     <basematerials id=""1"">
       <base name=""blue"" displaycolor=""#0000FFFF"" />
