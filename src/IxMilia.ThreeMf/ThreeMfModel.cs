@@ -11,6 +11,7 @@ namespace IxMilia.ThreeMf
     public class ThreeMfModel
     {
         internal const string ModelNamespace = "http://schemas.microsoft.com/3dmanufacturing/core/2015/02";
+        internal const string MaterialNamespace = "http://schemas.microsoft.com/3dmanufacturing/material/2015/02";
         private const string Metadata_Title = "Title";
         private const string Metadata_Designer = "Designer";
         private const string Metadata_Description = "Description";
@@ -33,10 +34,11 @@ namespace IxMilia.ThreeMf
 
         private static HashSet<string> KnownExtensionNamespaces = new HashSet<string>()
         {
+            ModelNamespace,
+            MaterialNamespace
         };
 
         public ThreeMfModelUnits ModelUnits { get; set; }
-        public HashSet<string> RequiredExtensionNamespaces { get; private set; }
         public string Title { get; set; }
         public string Designer { get; set; }
         public string Description { get; set; }
@@ -52,7 +54,6 @@ namespace IxMilia.ThreeMf
         public ThreeMfModel()
         {
             ModelUnits = ThreeMfModelUnits.Millimeter;
-            RequiredExtensionNamespaces = new HashSet<string>();
         }
 
         private void ParseModelUnits(string value)
@@ -85,19 +86,17 @@ namespace IxMilia.ThreeMf
             }
         }
 
-        internal static ThreeMfModel LoadXml(XElement root, IEnumerable<string> additionalSupportedNamespaces = null)
+        internal static ThreeMfModel LoadXml(XElement root)
         {
             var model = new ThreeMfModel();
             model.ParseModelUnits(root.Attribute(UnitAttributeName)?.Value);
             var requiredNamespaces = (root.Attribute(RequiredExtensionsAttributeName)?.Value ?? string.Empty)
                 .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(prefix => root.GetNamespaceOfPrefix(prefix).NamespaceName);
-            model.RequiredExtensionNamespaces = new HashSet<string>(requiredNamespaces);
 
-            var additionalNamespaces = new HashSet<string>(additionalSupportedNamespaces ?? new string[0]);
-            foreach (var rns in model.RequiredExtensionNamespaces)
+            foreach (var rns in requiredNamespaces)
             {
-                if (!KnownExtensionNamespaces.Contains(rns) && !additionalNamespaces.Contains(rns))
+                if (!KnownExtensionNamespaces.Contains(rns))
                 {
                     throw new ThreeMfParseException($"The required namespace '{rns}' is not supported.");
                 }
@@ -168,21 +167,18 @@ namespace IxMilia.ThreeMf
             }
 
             var modelXml = new XElement(ModelName);
-            var requiredNamespaces = new List<Tuple<string, string>>();
-            var currentNs = 'a';
-            foreach (var ns in RequiredExtensionNamespaces.OrderBy(n => n))
+
+            // ensure all appropriate namespaces are included
+            var extensionNamespaces = new List<Tuple<string, string>>();
+            if (Resources.Any(r => r is ThreeMfColorGroup))
             {
-                requiredNamespaces.Add(Tuple.Create(ns, currentNs.ToString()));
-                currentNs++;
+                extensionNamespaces.Add(Tuple.Create(MaterialNamespace, "m"));
             }
 
             modelXml.Add(
                 new XAttribute(UnitAttributeName, ModelUnits.ToString().ToLowerInvariant()),
-                requiredNamespaces.Count == 0
-                    ? null
-                    : new XAttribute(RequiredExtensionsAttributeName, string.Join(" ", requiredNamespaces.Select(rns => rns.Item2))),
                 new XAttribute(XmlLanguageAttributeName, DefaultLanguage),
-                requiredNamespaces.Select(rns => new XAttribute(XNamespace.Xmlns + rns.Item2, rns.Item1)),
+                extensionNamespaces.Select(rns => new XAttribute(XNamespace.Xmlns + rns.Item2, rns.Item1)),
                 GetMetadataXElements(Metadata_Title, Title),
                 GetMetadataXElements(Metadata_Designer, Designer),
                 GetMetadataXElements(Metadata_Description, Description),

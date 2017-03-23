@@ -1,7 +1,6 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
-using System.Linq;
 using Xunit;
 
 namespace IxMilia.ThreeMf.Test
@@ -29,9 +28,9 @@ namespace IxMilia.ThreeMf.Test
             Assert.Equal(xml.Trim(), actual);
         }
 
-        private ThreeMfModel ParseXml(string contents, IEnumerable<string> additionalSupportedNamespaces = null)
+        private ThreeMfModel ParseXml(string contents)
         {
-            return ThreeMfModelLoadTests.ParseXml(contents, additionalSupportedNamespaces);
+            return ThreeMfModelLoadTests.ParseXml(contents);
         }
 
         [Fact]
@@ -102,29 +101,15 @@ namespace IxMilia.ThreeMf.Test
         }
 
         [Fact]
-        public void ReadRequiredExtensionsTest()
+        public void ReadSupportedRequiredExtensionsTest()
         {
-            var xml = $@"<model requiredextensions=""i"" xmlns=""{ThreeMfModel.ModelNamespace}"" xmlns:i=""http://www.ixmilia.com"" />";
-
-            // unsupported required namespace
-            Assert.Throws<ThreeMfParseException>(() => ParseXml(xml));
-
-            // supported required namespace
-            var model = ParseXml(xml, additionalSupportedNamespaces: new[] { "http://www.ixmilia.com" });
-            Assert.Equal("http://www.ixmilia.com", model.RequiredExtensionNamespaces.Single());
+            var model = ParseXml($@"<model requiredextensions=""m"" xmlns=""{ThreeMfModel.ModelNamespace}"" xmlns:m=""{ThreeMfModel.MaterialNamespace}"" />");
         }
 
         [Fact]
-        public void WriteRequiredExtensionsTest()
+        public void ReadUnsupportedRequiredExtensionsTest()
         {
-            var model = new ThreeMfModel();
-            model.RequiredExtensionNamespaces.Add("http://www.ixmilia.com");
-            VerifyModelXml(@"
-<model requiredextensions=""a"" xmlns:a=""http://www.ixmilia.com"">
-  <resources />
-  <build />
-</model>
-", model);
+            Assert.Throws<ThreeMfParseException>(() => ParseXml($@"<model requiredextensions=""i"" xmlns=""{ThreeMfModel.ModelNamespace}"" xmlns:i=""http://www.ixmilia.com"" />"));
         }
 
         [Fact]
@@ -331,6 +316,25 @@ namespace IxMilia.ThreeMf.Test
         <triangles />
       </mesh>
     </object>
+  </resources>
+  <build />
+</model>
+", model);
+        }
+
+        [Fact]
+        public void WriteColorGroupTest()
+        {
+            var model = new ThreeMfModel();
+            var colorGroup = new ThreeMfColorGroup();
+            colorGroup.Colors.Add(new ThreeMfColor(new ThreeMfsRGBColor(0, 0, 255)));
+            model.Resources.Add(colorGroup);
+            VerifyModelXml($@"
+<model xmlns:m=""{ThreeMfModel.MaterialNamespace}"">
+  <resources>
+    <m:colorgroup id=""1"">
+      <m:color color=""#0000FFFF"" />
+    </m:colorgroup>
   </resources>
   <build />
 </model>

@@ -11,6 +11,7 @@ namespace IxMilia.ThreeMf
 
         protected static XName ObjectName = XName.Get("object", ThreeMfModel.ModelNamespace);
         internal static XName BaseMaterialsName = XName.Get("basematerials", ThreeMfModel.ModelNamespace);
+        internal static XName ColorGroupName = XName.Get("colorgroup", ThreeMfModel.MaterialNamespace);
 
         public int Id { get; internal set; }
 
@@ -25,6 +26,10 @@ namespace IxMilia.ThreeMf
             else if (element.Name == BaseMaterialsName)
             {
                 return ThreeMfBaseMaterials.ParseBaseMaterials(element);
+            }
+            else if (element.Name == ColorGroupName)
+            {
+                return ThreeMfColorGroup.ParseColorGroup(element);
             }
             else
             {

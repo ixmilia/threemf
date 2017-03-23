@@ -98,9 +98,9 @@ namespace IxMilia.ThreeMf
                     }
 
                     var propertyCount = propertyResource.PropertyItems.Count();
-                    var v1PropertyIndex = triangleElement.AttributeIntValueOrThrow(V1PropertyAttributeName);
-                    var v2PropertyIndex = triangleElement.AttributeIntValueOrThrow(V2PropertyAttributeName);
-                    var v3PropertyIndex = triangleElement.AttributeIntValueOrThrow(V3PropertyAttributeName);
+                    var v1PropertyIndex = TryParseVertexPropertyIndex(triangleElement, V1PropertyAttributeName);
+                    var v2PropertyIndex = TryParseVertexPropertyIndex(triangleElement, V2PropertyAttributeName);
+                    var v3PropertyIndex = TryParseVertexPropertyIndex(triangleElement, V3PropertyAttributeName);
                     if (v1PropertyIndex < 0 || v1PropertyIndex >= propertyCount ||
                         v2PropertyIndex < 0 || v2PropertyIndex >= propertyCount ||
                         v3PropertyIndex < 0 || v3PropertyIndex >= propertyCount)
@@ -120,6 +120,22 @@ namespace IxMilia.ThreeMf
             }
 
             return triangle;
+        }
+
+        private static int TryParseVertexPropertyIndex(XElement element, string attributeName)
+        {
+            var attribute = element.Attribute(attributeName);
+            if (attribute == null)
+            {
+                return 0;
+            }
+
+            if (!int.TryParse(attribute.Value, out var index))
+            {
+                throw new ThreeMfParseException($"Property index '{attribute.Value}' is not an int.");
+            }
+
+            return index;
         }
     }
 }

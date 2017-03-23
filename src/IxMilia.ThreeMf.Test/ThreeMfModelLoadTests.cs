@@ -1,6 +1,5 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Xunit;
@@ -9,15 +8,17 @@ namespace IxMilia.ThreeMf.Test
 {
     public class ThreeMfModelLoadTests
     {
-        internal static ThreeMfModel ParseXml(string contents, IEnumerable<string> additionalSupportedNamespaces = null)
+        internal static ThreeMfModel ParseXml(string contents)
         {
             var document = XDocument.Parse(contents);
-            return ThreeMfModel.LoadXml(document.Root, additionalSupportedNamespaces);
+            return ThreeMfModel.LoadXml(document.Root);
         }
 
         private ThreeMfModel FromContent(string content)
         {
-            return ParseXml($@"<model xmlns=""{ThreeMfModel.ModelNamespace}"">" + content + "</model>");
+            return ParseXml($@"<model xmlns=""{ThreeMfModel.ModelNamespace}"" xmlns:m=""{ThreeMfModel.MaterialNamespace}"">" +
+                content +
+                "</model>");
         }
 
         private void AssertUnits(string unitsString, ThreeMfModelUnits expectedUnits)
@@ -285,6 +286,21 @@ namespace IxMilia.ThreeMf.Test
 
             var obj = (ThreeMfObject)model.Resources.Last();
             Assert.Null(obj.PropertyResource);
+        }
+
+        [Fact]
+        public void ReadColorGroupTest()
+        {
+            var model = FromContent(@"
+<resources>
+  <m:colorgroup id=""1"">
+    <m:color color=""#0000FF00"" />
+  </m:colorgroup>
+</resources>
+");
+
+            var colorGroup = (ThreeMfColorGroup)model.Resources.Single();
+            Assert.Equal(new ThreeMfsRGBColor(0, 0, 255, 0), colorGroup.Colors.Single().Color);
         }
     }
 }
