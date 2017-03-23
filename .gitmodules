@@ -1,0 +1,3 @@
+[submodule "src/IxMilia.ThreeMf.Test/Samples"]
+	path = src/IxMilia.ThreeMf.Test/Samples
+	url = https://github.com/3MFConsortium/3mf-samples

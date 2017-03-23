@@ -13,12 +13,14 @@ namespace IxMilia.ThreeMf.Test
         [Fact]
         public void LoadFromDiskTest()
         {
-            var path = Path.Combine(Path.GetDirectoryName(typeof(ThreeMfFileLoadTests).GetTypeInfo().Assembly.Location), "box.3mf");
-            using (var fs = new FileStream(path, FileMode.Open))
+            var samplesDir = Path.Combine(Path.GetDirectoryName(typeof(ThreeMfFileLoadTests).GetTypeInfo().Assembly.Location), "Samples");
+            foreach (var path in Directory.EnumerateFiles(samplesDir, "*.3mf", SearchOption.AllDirectories))
             {
-                var file = ThreeMfFile.Load(fs);
-                var model = file.Models.Single();
-                Assert.Equal(ThreeMfModelUnits.Millimeter, model.ModelUnits);
+                using (var fs = new FileStream(path, FileMode.Open))
+                {
+                    var file = ThreeMfFile.Load(fs);
+                    var model = file.Models.Single();
+                }
             }
         }
 
