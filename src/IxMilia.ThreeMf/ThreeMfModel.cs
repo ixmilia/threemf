@@ -131,16 +131,25 @@ namespace IxMilia.ThreeMf
                 }
             }
 
-            // ensure components are included
+            // ensure components and property resources are included
             var objects = Resources.OfType<ThreeMfObject>().ToList();
-            foreach (var resource in objects)
+            foreach (var obj in objects)
             {
-                foreach (var component in resource.Components)
+                foreach (var component in obj.Components)
                 {
                     if (resourcesHash.Add(component.Object))
                     {
                         // components must be defined ahead of their reference
                         Resources.Insert(0, component.Object);
+                    }
+                }
+
+                foreach (var triangle in obj.Mesh.Triangles)
+                {
+                    if (triangle.PropertyResource != null && resourcesHash.Add((ThreeMfResource)triangle.PropertyResource))
+                    {
+                        // property resources must be defined ahead of their reference
+                        Resources.Insert(0, (ThreeMfResource)triangle.PropertyResource);
                     }
                 }
             }

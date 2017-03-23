@@ -50,7 +50,7 @@ namespace IxMilia.ThreeMf
                 new XAttribute(TypeAttributeName, Type.ToString().ToLowerInvariant()),
                 PartNumber == null ? null : new XAttribute(PartNumberAttributeName, PartNumber),
                 Name == null ? null : new XAttribute(NameAttributeName, Name),
-                Mesh.ToXElement(),
+                Mesh.ToXElement(resourceMap),
                 Components.Count == 0 ? null : new XElement(ComponentsName, Components.Select(c => c.ToXElement(resourceMap))));
         }
 
@@ -61,7 +61,7 @@ namespace IxMilia.ThreeMf
             obj.Type = ParseObjectType(element.Attribute(TypeAttributeName)?.Value);
             obj.PartNumber = element.Attribute(PartNumberAttributeName)?.Value;
             obj.Name = element.Attribute(NameAttributeName)?.Value;
-            obj.Mesh = ThreeMfMesh.ParseMesh(element.Element(MeshName));
+            obj.Mesh = ThreeMfMesh.ParseMesh(element.Element(MeshName), resourceMap);
             var components = element.Element(ComponentsName);
             if (components != null)
             {

@@ -8,9 +8,11 @@ using IxMilia.ThreeMf.Extensions;
 
 namespace IxMilia.ThreeMf
 {
-    public class ThreeMfBaseMaterials : ThreeMfResource
+    public class ThreeMfBaseMaterials : ThreeMfResource, IThreeMfPropertyResource
     {
         public IList<ThreeMfBase> Bases { get; } = new ListNonNull<ThreeMfBase>();
+
+        IEnumerable<IThreeMfPropertyItem> IThreeMfPropertyResource.PropertyItems => Bases;
 
         internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap)
         {

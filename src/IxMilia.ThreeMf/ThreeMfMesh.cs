@@ -13,17 +13,17 @@ namespace IxMilia.ThreeMf
 
         public IList<ThreeMfTriangle> Triangles { get; } = new List<ThreeMfTriangle>();
 
-        internal XElement ToXElement()
+        internal XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap)
         {
             var vertices = Triangles.SelectMany(t => new[] { t.V1, t.V2, t.V3 }).Distinct().ToList();
             var verticesXml = vertices.Select(v => v.ToXElement());
-            var trianglesXml = Triangles.Select(t => t.ToXElement(vertices));
+            var trianglesXml = Triangles.Select(t => t.ToXElement(vertices, resourceMap));
             return new XElement(ThreeMfObject.MeshName,
                 new XElement(VerticesName, verticesXml),
                 new XElement(TrianglesName, trianglesXml));
         }
 
-        internal static ThreeMfMesh ParseMesh(XElement element)
+        internal static ThreeMfMesh ParseMesh(XElement element, Dictionary<int, ThreeMfResource> resourceMap)
         {
             if (element == null)
             {
@@ -40,7 +40,7 @@ namespace IxMilia.ThreeMf
             var mesh = new ThreeMfMesh();
             foreach (var triangleElement in element.Element(TrianglesName).Elements(ThreeMfTriangle.TriangleName))
             {
-                var triangle = ThreeMfTriangle.ParseTriangle(triangleElement, vertices);
+                var triangle = ThreeMfTriangle.ParseTriangle(triangleElement, vertices, resourceMap);
                 mesh.Triangles.Add(triangle);
             }
 

@@ -21,7 +21,7 @@ namespace IxMilia.ThreeMf.Test
 
         private void VerifyMeshXml(string xml, ThreeMfMesh mesh)
         {
-            var actual = StripXmlns(mesh.ToXElement().ToString());
+            var actual = StripXmlns(mesh.ToXElement(new Dictionary<ThreeMfResource, int>()).ToString());
             Assert.Equal(xml.Trim(), actual);
         }
 
@@ -260,6 +260,43 @@ namespace IxMilia.ThreeMf.Test
       <base name=""blue"" displaycolor=""#0000FFFF"" />
       <base name=""green no alpha"" displaycolor=""#00FF0000"" />
     </basematerials>
+  </resources>
+  <build />
+</model>
+", model);
+        }
+
+        [Fact]
+        public void WriteTriangleVertexPropertiesTest()
+        {
+            var model = new ThreeMfModel();
+            var obj = new ThreeMfObject();
+            var baseMaterials = new ThreeMfBaseMaterials();
+            baseMaterials.Bases.Add(new ThreeMfBase("blue", new ThreeMfsRGBColor(0, 0, 255)));
+            var triangle = new ThreeMfTriangle(new ThreeMfVertex(0, 0, 0), new ThreeMfVertex(1, 1, 1), new ThreeMfVertex(2, 2, 2));
+            triangle.PropertyResource = baseMaterials;
+            obj.Mesh.Triangles.Add(triangle);
+            model.Resources.Add(obj);
+
+            // `baseMaterials` was never added to the model resources; ensure it is when writing
+            VerifyModelXml(@"
+<model unit=""millimeter"">
+  <resources>
+    <basematerials id=""1"">
+      <base name=""blue"" displaycolor=""#0000FFFF"" />
+    </basematerials>
+    <object id=""2"" type=""model"">
+      <mesh>
+        <vertices>
+          <vertex x=""0"" y=""0"" z=""0"" />
+          <vertex x=""1"" y=""1"" z=""1"" />
+          <vertex x=""2"" y=""2"" z=""2"" />
+        </vertices>
+        <triangles>
+          <triangle v1=""0"" v2=""1"" v3=""2"" pid=""1"" p1=""0"" p2=""0"" p3=""0"" />
+        </triangles>
+      </mesh>
+    </object>
   </resources>
   <build />
 </model>

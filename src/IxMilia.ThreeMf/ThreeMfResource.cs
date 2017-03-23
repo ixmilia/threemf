@@ -10,7 +10,7 @@ namespace IxMilia.ThreeMf
         protected const string IdAttributeName = "id";
 
         protected static XName ObjectName = XName.Get("object", ThreeMfModel.ModelNamespace);
-        protected static XName BaseMaterialsName = XName.Get("basematerials", ThreeMfModel.ModelNamespace);
+        internal static XName BaseMaterialsName = XName.Get("basematerials", ThreeMfModel.ModelNamespace);
 
         public int Id { get; internal set; }
 

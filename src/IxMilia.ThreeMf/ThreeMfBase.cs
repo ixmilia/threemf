@@ -5,7 +5,7 @@ using IxMilia.ThreeMf.Extensions;
 
 namespace IxMilia.ThreeMf
 {
-    public class ThreeMfBase
+    public class ThreeMfBase : IThreeMfPropertyItem
     {
         private const string NameAttributeName = "name";
         private const string DisplayColorAttributeName = "displaycolor";

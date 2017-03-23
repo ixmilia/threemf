@@ -82,6 +82,7 @@ namespace IxMilia.ThreeMf.Test
             var mesh = obj.Mesh;
             Assert.Equal(4, mesh.Triangles.Count);
             Assert.Equal(5.0, mesh.Triangles.First().V3.Z);
+            Assert.Null(mesh.Triangles.First().PropertyResource);
         }
 
         [Fact]
@@ -181,6 +182,65 @@ namespace IxMilia.ThreeMf.Test
 
             Assert.Equal("green no alpha", baseMaterials.Bases.Last().Name);
             Assert.Equal(new ThreeMfsRGBColor(0, 255, 0), baseMaterials.Bases.Last().Color);
+        }
+
+        [Fact]
+        public void ReadTriangleVertexPropertiesTest()
+        {
+            var model = FromContent(@"
+<resources>
+  <basematerials id=""1"">
+    <base name=""white"" displaycolor=""#FFFFFF"" />
+    <base name=""black"" displaycolor=""#000000"" />
+  </basematerials>
+  <object id=""2"">
+    <mesh>
+      <vertices>
+        <vertex x=""0"" y=""0"" z=""0"" />
+        <vertex x=""0"" y=""0"" z=""0"" />
+        <vertex x=""0"" y=""0"" z=""0"" />
+      </vertices>
+      <triangles>
+        <triangle v1=""0"" v2=""1"" v3=""2"" pid=""1"" p1=""0"" p2=""0"" p3=""1"" />
+      </triangles>
+    </mesh>
+  </object>
+</resources>
+");
+
+            var triangle = ((ThreeMfObject)model.Resources.Last()).Mesh.Triangles.Single();
+            var propertyResource = triangle.PropertyResource;
+            Assert.Equal("white", ((ThreeMfBase)propertyResource.PropertyItems.First()).Name);
+            Assert.Equal(0, triangle.V1PropertyIndex);
+            Assert.Equal(0, triangle.V2PropertyIndex);
+            Assert.Equal(1, triangle.V3PropertyIndex);
+        }
+
+        [Fact]
+        public void ReadTriangleVertexPropertiesFromUnsupportedResourceTest()
+        {
+            var model = ParseXml($@"
+<model xmlns=""{ThreeMfModel.ModelNamespace}"" xmlns:x=""http://www.ixmilia.com"">
+  <resources>
+    <x:unsupported id=""1"" />
+    <object id=""2"">
+      <mesh>
+        <vertices>
+          <vertex x=""0"" y=""0"" z=""0"" />
+          <vertex x=""0"" y=""0"" z=""0"" />
+          <vertex x=""0"" y=""0"" z=""0"" />
+        </vertices>
+        <triangles>
+          <triangle v1=""0"" v2=""1"" v3=""2"" pid=""1"" p1=""0"" p2=""0"" p3=""1"" />
+        </triangles>
+      </mesh>
+    </object>
+  </resources>
+</model>
+");
+
+            var triangle = ((ThreeMfObject)model.Resources.Last()).Mesh.Triangles.Single();
+            Assert.Null(triangle.PropertyResource);
         }
     }
 }
