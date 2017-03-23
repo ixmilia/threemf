@@ -1,7 +1,6 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
-using System.Linq;
 using System.Xml.Linq;
 using IxMilia.ThreeMf.Extensions;
 
@@ -80,62 +79,15 @@ namespace IxMilia.ThreeMf
             }
 
             var triangle = new ThreeMfTriangle(vertices[v1Index], vertices[v2Index], vertices[v3Index]);
-
-            var propertyIndexAttribute = triangleElement.Attribute(PropertyIndexAttributeName);
-            if (propertyIndexAttribute != null)
+            if (resourceMap.TryGetPropertyResource(triangleElement, PropertyIndexAttributeName, out var propertyResource))
             {
-                if (!int.TryParse(propertyIndexAttribute.Value, out var propertyIndex))
-                {
-                    throw new ThreeMfParseException($"Property index '{propertyIndexAttribute.Value}' is not an int.");
-                }
-
-                if (resourceMap.ContainsKey(propertyIndex))
-                {
-                    var propertyResource = resourceMap[propertyIndex] as IThreeMfPropertyResource;
-                    if (propertyResource == null)
-                    {
-                        throw new ThreeMfParseException($"{nameof(PropertyResource)} was expected to be of type {nameof(IThreeMfPropertyResource)}.");
-                    }
-
-                    var propertyCount = propertyResource.PropertyItems.Count();
-                    var v1PropertyIndex = TryParseVertexPropertyIndex(triangleElement, V1PropertyAttributeName);
-                    var v2PropertyIndex = TryParseVertexPropertyIndex(triangleElement, V2PropertyAttributeName);
-                    var v3PropertyIndex = TryParseVertexPropertyIndex(triangleElement, V3PropertyAttributeName);
-                    if (v1PropertyIndex < 0 || v1PropertyIndex >= propertyCount ||
-                        v2PropertyIndex < 0 || v2PropertyIndex >= propertyCount ||
-                        v3PropertyIndex < 0 || v3PropertyIndex >= propertyCount)
-                    {
-                        throw new ThreeMfParseException($"Property index is out of range.  Value must be [0, {propertyCount}).");
-                    }
-
-                    triangle.PropertyResource = propertyResource;
-                    triangle.V1PropertyIndex = v1PropertyIndex;
-                    triangle.V2PropertyIndex = v2PropertyIndex;
-                    triangle.V3PropertyIndex = v3PropertyIndex;
-                }
-                else
-                {
-                    // could have been an unsupported resource type
-                }
+                triangle.PropertyResource = propertyResource;
+                triangle.V1PropertyIndex = propertyResource.ParseAndValidateOptionalResourceIndex(triangleElement, V1PropertyAttributeName);
+                triangle.V2PropertyIndex = propertyResource.ParseAndValidateOptionalResourceIndex(triangleElement, V2PropertyAttributeName);
+                triangle.V3PropertyIndex = propertyResource.ParseAndValidateOptionalResourceIndex(triangleElement, V3PropertyAttributeName);
             }
 
             return triangle;
-        }
-
-        private static int TryParseVertexPropertyIndex(XElement element, string attributeName)
-        {
-            var attribute = element.Attribute(attributeName);
-            if (attribute == null)
-            {
-                return 0;
-            }
-
-            if (!int.TryParse(attribute.Value, out var index))
-            {
-                throw new ThreeMfParseException($"Property index '{attribute.Value}' is not an int.");
-            }
-
-            return index;
         }
     }
 }

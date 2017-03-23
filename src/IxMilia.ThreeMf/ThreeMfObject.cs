@@ -81,43 +81,14 @@ namespace IxMilia.ThreeMf
                 }
             }
 
-            var propertyReferenceAttribute = element.Attribute(PropertyReferenceAttributeName);
-            if (propertyReferenceAttribute != null)
+            if (resourceMap.TryGetPropertyResource(element, PropertyReferenceAttributeName, out var propertyResource))
             {
-                if (!int.TryParse(propertyReferenceAttribute.Value, out var propertyIndex))
-                {
-                    throw new ThreeMfParseException($"Property index '{propertyReferenceAttribute.Value}' is not an int.");
-                }
-
-                if (resourceMap.ContainsKey(propertyIndex))
-                {
-                    var propertyResource = resourceMap[propertyIndex] as IThreeMfPropertyResource;
-                    if (propertyResource == null)
-                    {
-                        throw new ThreeMfParseException($"{nameof(PropertyResource)} was expected to be of type {nameof(IThreeMfPropertyResource)}.");
-                    }
-
-                    var propertyCount = propertyResource.PropertyItems.Count();
-                    var propertyIndexValue = element.AttributeIntValueOrThrow(PropertyIndexAttributeName);
-                    if (propertyIndexValue < 0 || propertyIndexValue >= propertyCount)
-                    {
-                        throw new ThreeMfParseException($"Property index is out of range.  Value must be [0, {propertyCount}).");
-                    }
-
-                    obj.PropertyResource = propertyResource;
-                    obj.PropertyIndex = propertyIndexValue;
-                }
-                else
-                {
-                    // could have been an unsupported resource type
-                }
+                obj.PropertyResource = propertyResource;
+                obj.PropertyIndex = propertyResource.ParseAndValidateRequiredResourceIndex(element, PropertyIndexAttributeName);
             }
-            else
+            else if (element.Attribute(PropertyReferenceAttributeName) == null && element.Attribute(PropertyIndexAttributeName) != null)
             {
-                if (element.Attribute(PropertyIndexAttributeName) != null)
-                {
-                    throw new ThreeMfParseException($"Attribute '{PropertyIndexAttributeName}' is only valid if '{PropertyReferenceAttributeName}' is also specified.");
-                }
+                throw new ThreeMfParseException($"Attribute '{PropertyIndexAttributeName}' is only valid if '{PropertyReferenceAttributeName}' is also specified.");
             }
 
             return obj;
