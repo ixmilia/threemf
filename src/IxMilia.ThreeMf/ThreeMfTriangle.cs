@@ -23,9 +23,9 @@ namespace IxMilia.ThreeMf
         public ThreeMfVertex V3 { get; set; }
 
         public IThreeMfPropertyResource PropertyResource { get; set; }
-        public int V1PropertyIndex { get; set; }
-        public int V2PropertyIndex { get; set; }
-        public int V3PropertyIndex { get; set; }
+        public int? V1PropertyIndex { get; set; }
+        public int? V2PropertyIndex { get; set; }
+        public int? V3PropertyIndex { get; set; }
 
         public ThreeMfTriangle(ThreeMfVertex v1, ThreeMfVertex v2, ThreeMfVertex v3)
         {
@@ -33,9 +33,9 @@ namespace IxMilia.ThreeMf
             V2 = v2;
             V3 = v3;
             PropertyResource = null;
-            V1PropertyIndex = 0;
-            V2PropertyIndex = 0;
-            V3PropertyIndex = 0;
+            V1PropertyIndex = null;
+            V2PropertyIndex = null;
+            V3PropertyIndex = null;
         }
 
         internal XElement ToXElement(List<ThreeMfVertex> vertices, Dictionary<ThreeMfResource, int> resourceMap)
@@ -49,9 +49,9 @@ namespace IxMilia.ThreeMf
                     : new[]
                     {
                         new XAttribute(PropertyIndexAttributeName, resourceMap[(ThreeMfResource)PropertyResource]),
-                        new XAttribute(V1PropertyAttributeName, V1PropertyIndex),
-                        new XAttribute(V2PropertyAttributeName, V2PropertyIndex),
-                        new XAttribute(V3PropertyAttributeName, V3PropertyIndex)
+                        V1PropertyIndex == null ? null : new XAttribute(V1PropertyAttributeName, V1PropertyIndex.GetValueOrDefault()),
+                        V2PropertyIndex == null ? null : new XAttribute(V2PropertyAttributeName, V2PropertyIndex.GetValueOrDefault()),
+                        V3PropertyIndex == null ? null : new XAttribute(V3PropertyAttributeName, V3PropertyIndex.GetValueOrDefault())
                     });
         }
 

@@ -264,6 +264,9 @@ namespace IxMilia.ThreeMf.Test
             baseMaterials.Bases.Add(new ThreeMfBase("blue", new ThreeMfsRGBColor(0, 0, 255)));
             var triangle = new ThreeMfTriangle(new ThreeMfVertex(0, 0, 0), new ThreeMfVertex(1, 1, 1), new ThreeMfVertex(2, 2, 2));
             triangle.PropertyResource = baseMaterials;
+            triangle.V1PropertyIndex = 0;
+            triangle.V2PropertyIndex = null;
+            triangle.V3PropertyIndex = null;
             obj.Mesh.Triangles.Add(triangle);
             model.Resources.Add(obj);
 
@@ -282,7 +285,7 @@ namespace IxMilia.ThreeMf.Test
           <vertex x=""2"" y=""2"" z=""2"" />
         </vertices>
         <triangles>
-          <triangle v1=""0"" v2=""1"" v3=""2"" pid=""1"" p1=""0"" p2=""0"" p3=""0"" />
+          <triangle v1=""0"" v2=""1"" v3=""2"" pid=""1"" p1=""0"" />
         </triangles>
       </mesh>
     </object>

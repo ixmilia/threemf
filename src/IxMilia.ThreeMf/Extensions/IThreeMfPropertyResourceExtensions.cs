@@ -42,12 +42,12 @@ namespace IxMilia.ThreeMf.Extensions
             return index;
         }
 
-        public static int ParseAndValidateOptionalResourceIndex(this IThreeMfPropertyResource propertyResource, XElement element, string attributeName)
+        public static int? ParseAndValidateOptionalResourceIndex(this IThreeMfPropertyResource propertyResource, XElement element, string attributeName)
         {
             var attribute = element.Attribute(attributeName);
             if (attribute == null)
             {
-                return 0;
+                return null;
             }
 
             if (!int.TryParse(attribute.Value, out var index))

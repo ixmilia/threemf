@@ -202,7 +202,7 @@ namespace IxMilia.ThreeMf.Test
         <vertex x=""0"" y=""0"" z=""0"" />
       </vertices>
       <triangles>
-        <triangle v1=""0"" v2=""1"" v3=""2"" pid=""1"" p1=""0"" p2=""0"" p3=""1"" />
+        <triangle v1=""0"" v2=""1"" v3=""2"" pid=""1"" p1=""0"" p3=""1"" />
       </triangles>
     </mesh>
   </object>
@@ -213,7 +213,7 @@ namespace IxMilia.ThreeMf.Test
             var propertyResource = triangle.PropertyResource;
             Assert.Equal("white", ((ThreeMfBase)propertyResource.PropertyItems.First()).Name);
             Assert.Equal(0, triangle.V1PropertyIndex);
-            Assert.Equal(0, triangle.V2PropertyIndex);
+            Assert.Null(triangle.V2PropertyIndex);
             Assert.Equal(1, triangle.V3PropertyIndex);
         }
 
