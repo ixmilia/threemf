@@ -31,6 +31,7 @@ namespace IxMilia.ThreeMf
 
         public ThreeMfTexture2D(Stream textureStream, ThreeMfTextureContentType contentType)
         {
+            BoundingBox = ThreeMfBoundingBox.Default;
             TextureStream = textureStream;
             ContentType = contentType;
         }

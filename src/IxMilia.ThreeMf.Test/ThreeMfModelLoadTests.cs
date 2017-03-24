@@ -324,5 +324,24 @@ namespace IxMilia.ThreeMf.Test
             Assert.Equal(ThreeMfTileStyle.Mirror, texture.TileStyleU);
             Assert.Equal(ThreeMfTileStyle.Wrap, texture.TileStyleV);
         }
+
+        [Fact]
+        public void ReadTexture2DGroupTest()
+        {
+            var model = FromContent(@"
+<resources>
+  <m:texture2d id=""1"" path=""/3D/Textures/texture.png"" contenttype=""image/png"" />
+  <m:texture2dgroup id=""2"" texid=""1"">
+    <m:tex2coord u=""1"" v=""2"" />
+  </m:texture2dgroup>
+</resources>
+");
+
+            var texture = (ThreeMfTexture2D)model.Resources.First();
+            var textureGroup = (ThreeMfTexture2DGroup)model.Resources.Last();
+            Assert.True(ReferenceEquals(texture, textureGroup.Texture));
+            Assert.Equal(1.0, textureGroup.Coordinates.Single().U);
+            Assert.Equal(2.0, textureGroup.Coordinates.Single().V);
+        }
     }
 }

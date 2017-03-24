@@ -15,6 +15,7 @@ namespace IxMilia.ThreeMf
         internal static XName BaseMaterialsName = XName.Get("basematerials", ThreeMfModel.ModelNamespace);
         internal static XName ColorGroupName = XName.Get("colorgroup", ThreeMfModel.MaterialNamespace);
         internal static XName Texture2DName = XName.Get("texture2d", ThreeMfModel.MaterialNamespace);
+        internal static XName Texture2DGroupName = XName.Get("texture2dgroup", ThreeMfModel.MaterialNamespace);
 
         public int Id { get; internal set; }
 
@@ -37,6 +38,10 @@ namespace IxMilia.ThreeMf
             else if (element.Name == Texture2DName)
             {
                 return ThreeMfTexture2D.ParseTexture(element, getArchiveEntry);
+            }
+            else if (element.Name == Texture2DGroupName)
+            {
+                return ThreeMfTexture2DGroup.ParseTexture2DGroup(element, resourceMap);
             }
             else
             {

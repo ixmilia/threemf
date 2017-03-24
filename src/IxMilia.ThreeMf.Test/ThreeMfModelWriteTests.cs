@@ -374,5 +374,26 @@ namespace IxMilia.ThreeMf.Test
 </model>
 ".Trim(), text);
         }
+
+        [Fact]
+        public void WriteTexture2DGroupTest()
+        {
+            var model = new ThreeMfModel();
+            var textureGroup = new ThreeMfTexture2DGroup(new ThreeMfTexture2D(new MemoryStream(), ThreeMfTextureContentType.Jpeg));
+            textureGroup.Coordinates.Add(new ThreeMfTexture2DCoordinate(1.0, 2.0));
+            model.Resources.Add(textureGroup);
+
+            // texture was never added to the texture group; ensure it is when writing
+            var text = GetStrippedModelXml(model);
+            Assert.EndsWith(@"
+.jpg"" contenttype=""image/jpeg"" />
+    <m:texture2dgroup id=""2"" texid=""1"">
+      <m:tex2coord u=""1"" v=""2"" />
+    </m:texture2dgroup>
+  </resources>
+  <build />
+</model>
+".Trim(), text);
+        }
     }
 }

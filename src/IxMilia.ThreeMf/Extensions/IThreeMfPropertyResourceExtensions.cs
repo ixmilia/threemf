@@ -65,6 +65,7 @@ namespace IxMilia.ThreeMf.Extensions
             var propertyCount =
                 (propertyResource.PropertyItems as IList<ThreeMfBase>)?.Count ??
                 (propertyResource.PropertyItems as IList<ThreeMfColor>)?.Count ??
+                (propertyResource.PropertyItems as IList<ThreeMfTexture2DCoordinate>)?.Count ??
                 -1;
             if (propertyCount == -1)
             {

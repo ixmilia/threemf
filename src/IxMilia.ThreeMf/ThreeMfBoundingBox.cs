@@ -24,6 +24,8 @@ namespace IxMilia.ThreeMf
             Height = height;
         }
 
+        public static ThreeMfBoundingBox Default => new ThreeMfBoundingBox(0.0, 0.0, 1.0, 1.0);
+
         internal XAttribute ToXAttribute()
         {
             if (IsDefault)
@@ -39,7 +41,7 @@ namespace IxMilia.ThreeMf
         {
             if (value == null)
             {
-                return new ThreeMfBoundingBox(0.0, 0.0, 1.0, 1.0);
+                return ThreeMfBoundingBox.Default;
             }
 
             var parts = value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);

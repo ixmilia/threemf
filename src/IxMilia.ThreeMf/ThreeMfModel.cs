@@ -132,30 +132,40 @@ namespace IxMilia.ThreeMf
             }
 
             // ensure components and property resources are included
-            var objects = Resources.OfType<ThreeMfObject>().ToList();
-            foreach (var obj in objects)
+            foreach (var resource in Resources.ToList())
             {
-                foreach (var component in obj.Components)
+                if (resource is ThreeMfObject obj)
                 {
-                    if (resourcesHash.Add(component.Object))
+                    foreach (var component in obj.Components)
                     {
-                        // components must be defined ahead of their reference
-                        Resources.Insert(0, component.Object);
+                        if (resourcesHash.Add(component.Object))
+                        {
+                            // components must be defined ahead of their reference
+                            Resources.Insert(0, component.Object);
+                        }
                     }
-                }
 
-                if (obj.PropertyResource != null && resourcesHash.Add((ThreeMfResource)obj.PropertyResource))
-                {
-                    // property resources must be defined ahead of their reference
-                    Resources.Insert(0, (ThreeMfResource)obj.PropertyResource);
-                }
-
-                foreach (var triangle in obj.Mesh.Triangles)
-                {
-                    if (triangle.PropertyResource != null && resourcesHash.Add((ThreeMfResource)triangle.PropertyResource))
+                    if (obj.PropertyResource != null && resourcesHash.Add((ThreeMfResource)obj.PropertyResource))
                     {
                         // property resources must be defined ahead of their reference
-                        Resources.Insert(0, (ThreeMfResource)triangle.PropertyResource);
+                        Resources.Insert(0, (ThreeMfResource)obj.PropertyResource);
+                    }
+
+                    foreach (var triangle in obj.Mesh.Triangles)
+                    {
+                        if (triangle.PropertyResource != null && resourcesHash.Add((ThreeMfResource)triangle.PropertyResource))
+                        {
+                            // property resources must be defined ahead of their reference
+                            Resources.Insert(0, (ThreeMfResource)triangle.PropertyResource);
+                        }
+                    }
+                }
+                else if (resource is ThreeMfTexture2DGroup textureGroup)
+                {
+                    if (resourcesHash.Add(textureGroup.Texture))
+                    {
+                        // textures must be defined ahead of their reference
+                        Resources.Insert(0, textureGroup.Texture);
                     }
                 }
             }
@@ -171,7 +181,7 @@ namespace IxMilia.ThreeMf
 
             // ensure all appropriate namespaces are included
             var extensionNamespaces = new List<Tuple<string, string>>();
-            if (Resources.Any(r => r is ThreeMfColorGroup || r is ThreeMfTexture2D))
+            if (Resources.Any(r => r is ThreeMfColorGroup || r is ThreeMfTexture2D || r is ThreeMfTexture2DGroup))
             {
                 extensionNamespaces.Add(Tuple.Create(MaterialNamespace, "m"));
             }
