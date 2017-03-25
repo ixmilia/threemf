@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using IxMilia.ThreeMf.Collections;
@@ -27,7 +28,7 @@ namespace IxMilia.ThreeMf
 
         private static XName ModelName = XName.Get("model", ModelNamespace);
         private static XName BuildName = XName.Get("build", ModelNamespace);
-        private static XName ResourcesName = XName.Get("resources", ModelNamespace);
+        internal static XName ResourcesName = XName.Get("resources", ModelNamespace);
         private static XName MetadataName = XName.Get("metadata", ModelNamespace);
         
         private static XName XmlLanguageAttributeName = XNamespace.Xml + "lang";
@@ -86,7 +87,7 @@ namespace IxMilia.ThreeMf
             }
         }
 
-        internal static ThreeMfModel LoadXml(XElement root)
+        internal static ThreeMfModel LoadXml(XElement root, Func<string, Stream> getArchiveEntry)
         {
             var model = new ThreeMfModel();
             model.ParseModelUnits(root.Attribute(UnitAttributeName)?.Value);
@@ -112,13 +113,13 @@ namespace IxMilia.ThreeMf
             model.CreationDate = GetMetadataValue(root, Metadata_CreationDate);
             model.ModificationDate = GetMetadataValue(root, Metadata_ModificationDate);
 
-            var resourceMap = model.ParseResources(root.Element(ResourcesName));
+            var resourceMap = model.ParseResources(root.Element(ResourcesName), getArchiveEntry);
             model.ParseBuild(root.Element(BuildName), resourceMap);
 
             return model;
         }
 
-        internal XElement ToXElement()
+        internal XElement ToXElement(Action<string, Stream> addArchiveEntry)
         {
             // ensure build items are included
             var resourcesHash = new HashSet<ThreeMfResource>(Resources);
@@ -170,7 +171,7 @@ namespace IxMilia.ThreeMf
 
             // ensure all appropriate namespaces are included
             var extensionNamespaces = new List<Tuple<string, string>>();
-            if (Resources.Any(r => r is ThreeMfColorGroup))
+            if (Resources.Any(r => r is ThreeMfColorGroup || r is ThreeMfTexture2D))
             {
                 extensionNamespaces.Add(Tuple.Create(MaterialNamespace, "m"));
             }
@@ -188,7 +189,7 @@ namespace IxMilia.ThreeMf
                 GetMetadataXElements(Metadata_CreationDate, CreationDate),
                 GetMetadataXElements(Metadata_ModificationDate, ModificationDate),
                 new XElement(ResourcesName,
-                    Resources.Select(r => r.ToXElement(resourceMap))),
+                    Resources.Select(r => r.ToXElement(resourceMap, addArchiveEntry))),
                 new XElement(BuildName,
                     Items.Select(i => i.ToXElement(resourceMap))));
             return modelXml;
@@ -203,7 +204,7 @@ namespace IxMilia.ThreeMf
                     .Select(l => new XElement(MetadataName, new XAttribute(NameAttributeName, metadataType), l));
         }
 
-        private Dictionary<int, ThreeMfResource> ParseResources(XElement resources)
+        private Dictionary<int, ThreeMfResource> ParseResources(XElement resources, Func<string, Stream> getArchiveEntry)
         {
             var resourceMap = new Dictionary<int, ThreeMfResource>();
             if (resources == null)
@@ -213,7 +214,7 @@ namespace IxMilia.ThreeMf
 
             foreach (var element in resources.Elements())
             {
-                var resource = ThreeMfResource.ParseResource(element, resourceMap);
+                var resource = ThreeMfResource.ParseResource(element, resourceMap, getArchiveEntry);
                 if (resource != null)
                 {
                     Resources.Add(resource);

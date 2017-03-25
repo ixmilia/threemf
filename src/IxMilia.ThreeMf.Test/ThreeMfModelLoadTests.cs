@@ -1,5 +1,7 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Xunit;
@@ -11,7 +13,8 @@ namespace IxMilia.ThreeMf.Test
         internal static ThreeMfModel ParseXml(string contents)
         {
             var document = XDocument.Parse(contents);
-            return ThreeMfModel.LoadXml(document.Root);
+            var getArchiveEntry = new Func<string, Stream>(_ => new MemoryStream());
+            return ThreeMfModel.LoadXml(document.Root, getArchiveEntry);
         }
 
         private ThreeMfModel FromContent(string content)
@@ -301,6 +304,25 @@ namespace IxMilia.ThreeMf.Test
 
             var colorGroup = (ThreeMfColorGroup)model.Resources.Single();
             Assert.Equal(new ThreeMfsRGBColor(0, 0, 255, 0), colorGroup.Colors.Single().Color);
+        }
+
+        [Fact]
+        public void ReadTexture2DTest()
+        {
+            var model = FromContent(@"
+<resources>
+  <m:texture2d id=""1"" path=""/3D/Textures/texture.png"" contenttype=""image/png"" box=""0 1 2 3"" tilestyleu=""mirror"" />
+</resources>
+");
+
+            var texture = (ThreeMfTexture2D)model.Resources.Single();
+            Assert.Equal(ThreeMfTextureContentType.Png, texture.ContentType);
+            Assert.Equal(0.0, texture.BoundingBox.U);
+            Assert.Equal(1.0, texture.BoundingBox.V);
+            Assert.Equal(2.0, texture.BoundingBox.Width);
+            Assert.Equal(3.0, texture.BoundingBox.Height);
+            Assert.Equal(ThreeMfTileStyle.Mirror, texture.TileStyleU);
+            Assert.Equal(ThreeMfTileStyle.Wrap, texture.TileStyleV);
         }
     }
 }

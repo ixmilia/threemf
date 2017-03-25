@@ -1,6 +1,8 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
+using System.IO;
 using Xunit;
 
 namespace IxMilia.ThreeMf.Test
@@ -13,12 +15,17 @@ namespace IxMilia.ThreeMf.Test
             return value.Replace(" xmlns=\"" + ThreeMfModel.ModelNamespace + "\"", "");
         }
 
-        private void VerifyModelXml(string xml, ThreeMfModel model)
+        private string GetStrippedModelXml(ThreeMfModel model)
         {
             // don't want to specify the defaults in every test
-            var actual = StripXmlns(model.ToXElement().ToString())
+            return StripXmlns(model.ToXElement(new Action<string, Stream>((_, __) => { })).ToString())
                 .Replace(@" xml:lang=""en-US""", "")
                 .Replace(@" unit=""millimeter""", "");
+        }
+
+        private void VerifyModelXml(string xml, ThreeMfModel model)
+        {
+            var actual = GetStrippedModelXml(model);
             Assert.Equal(xml.Trim(), actual);
         }
 
@@ -342,6 +349,30 @@ namespace IxMilia.ThreeMf.Test
   <build />
 </model>
 ", model);
+        }
+
+        [Fact]
+        public void WriteTexture2DTest()
+        {
+            var model = new ThreeMfModel();
+            var texture = new ThreeMfTexture2D(new MemoryStream(), ThreeMfTextureContentType.Jpeg);
+            texture.BoundingBox = new ThreeMfBoundingBox(0.0, 1.0, 2.0, 3.0);
+            texture.TileStyleU = ThreeMfTileStyle.Mirror;
+            model.Resources.Add(texture);
+            var text = GetStrippedModelXml(model);
+
+            // texture path is randomly generated so we have to check before and after it
+            Assert.StartsWith($@"
+<model xmlns:m=""{ThreeMfModel.MaterialNamespace}"">
+  <resources>
+    <m:texture2d id=""1"" path=""/3D/Textures/
+".Trim(), text);
+            Assert.EndsWith(@"
+.jpg"" contenttype=""image/jpeg"" box=""0 1 2 3"" tilestyleu=""mirror"" />
+  </resources>
+  <build />
+</model>
+".Trim(), text);
         }
     }
 }
