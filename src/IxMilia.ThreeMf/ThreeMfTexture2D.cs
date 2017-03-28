@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Xml.Linq;
 using IxMilia.ThreeMf.Extensions;
 
@@ -16,30 +15,30 @@ namespace IxMilia.ThreeMf
         private const string TileStyleUAttributeName = "tilestyleu";
         private const string TileStyleVAttributeName = "tilestylev";
 
-        private Stream _textureStream;
+        private byte[] _textureBytes;
 
         public ThreeMfTextureContentType ContentType { get; set; }
         public ThreeMfBoundingBox BoundingBox { get; set; }
         public ThreeMfTileStyle TileStyleU { get; set; }
         public ThreeMfTileStyle TileStyleV { get; set; }
 
-        public Stream TextureStream
+        public byte[] TextureBytes
         {
-            get => _textureStream;
-            set => _textureStream = value ?? throw new ArgumentNullException(nameof(value));
+            get => _textureBytes;
+            set => _textureBytes = value ?? throw new ArgumentNullException(nameof(value));
         }
 
-        public ThreeMfTexture2D(Stream textureStream, ThreeMfTextureContentType contentType)
+        public ThreeMfTexture2D(byte[] textureBytes, ThreeMfTextureContentType contentType)
         {
             BoundingBox = ThreeMfBoundingBox.Default;
-            TextureStream = textureStream;
+            TextureBytes = textureBytes;
             ContentType = contentType;
         }
 
-        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, Action<string, Stream> addArchiveEntry)
+        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, Action<string, byte[]> addArchiveEntry)
         {
             var path = $"/3D/Textures/{Guid.NewGuid().ToString("N")}{ContentType.ToExtensionString()}";
-            addArchiveEntry(path, TextureStream);
+            addArchiveEntry(path, TextureBytes);
             return new XElement(Texture2DName,
                 new XAttribute(IdAttributeName, Id),
                 new XAttribute(PathAttributeName, path),
@@ -49,15 +48,13 @@ namespace IxMilia.ThreeMf
                 TileStyleV == ThreeMfTileStyle.Wrap ? null : new XAttribute(TileStyleVAttributeName, TileStyleV.ToTileStyleString()));
         }
 
-        internal static ThreeMfTexture2D ParseTexture(XElement element, Func<string, Stream> getArchiveEntry)
+        internal static ThreeMfTexture2D ParseTexture(XElement element, Func<string, byte[]> getArchiveEntry)
         {
             var path = element.AttributeValueOrThrow(PathAttributeName);
             var id = element.AttributeIntValueOrThrow(IdAttributeName);
-            var textureStream = new MemoryStream();
-            getArchiveEntry(path).CopyTo(textureStream);
-            textureStream.Seek(0, SeekOrigin.Begin);
+            var textureBytes = getArchiveEntry(path);
             var contentType = ThreeMfTextureContentTypeExtensions.ParseContentType(element.AttributeValueOrThrow(ContentTypeAttributeName));
-            var texture = new ThreeMfTexture2D(textureStream, contentType)
+            var texture = new ThreeMfTexture2D(textureBytes, contentType)
             {
                 BoundingBox = ThreeMfBoundingBox.ParseBoundingBox(element.Attribute(ThreeMfBoundingBox.BoundingBoxAttributeName)?.Value),
                 TileStyleU = ThreeMfTileStyleExtensions.ParseTileStyle(element.Attribute(TileStyleUAttributeName)?.Value),

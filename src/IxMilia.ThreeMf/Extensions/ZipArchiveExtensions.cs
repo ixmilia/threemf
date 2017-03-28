@@ -29,5 +29,18 @@ namespace IxMilia.ThreeMf.Extensions
 
             return entry.Open();
         }
+
+        public static byte[] GetEntryBytes(this ZipArchive archive, string path)
+        {
+            using (var entryStream = archive.GetEntryStream(path))
+            using (var memoryStream = new MemoryStream())
+            {
+                entryStream.CopyTo(memoryStream);
+                memoryStream.Seek(0, SeekOrigin.Begin);
+                var data = new byte[memoryStream.Length];
+                memoryStream.Read(data, 0, data.Length);
+                return data;
+            }
+        }
     }
 }

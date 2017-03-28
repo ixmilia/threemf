@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Xml.Linq;
 
 namespace IxMilia.ThreeMf
@@ -19,9 +18,9 @@ namespace IxMilia.ThreeMf
 
         public int Id { get; internal set; }
 
-        abstract internal XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, Action<string, Stream> addArchiveEntry);
+        abstract internal XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, Action<string, byte[]> addArchiveEntry);
 
-        internal static ThreeMfResource ParseResource(XElement element, Dictionary<int, ThreeMfResource> resourceMap, Func<string, Stream> getArchiveEntry)
+        internal static ThreeMfResource ParseResource(XElement element, Dictionary<int, ThreeMfResource> resourceMap, Func<string, byte[]> getArchiveEntry)
         {
             if (element.Name == ObjectName)
             {

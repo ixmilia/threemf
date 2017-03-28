@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using System.Xml.Linq;
 using Xunit;
 
@@ -11,14 +12,9 @@ namespace IxMilia.ThreeMf.Test
 {
     public class ThreeMfFileSaveTests
     {
-        private Stream StringToStream(string value)
+        private byte[] StringToBytes(string value)
         {
-            var stream = new MemoryStream();
-            var writer = new StreamWriter(stream);
-            writer.Write(value);
-            writer.Flush();
-            stream.Seek(0, SeekOrigin.Begin);
-            return stream;
+            return Encoding.UTF8.GetBytes(value);
         }
 
         private ZipArchive GetArchiveFromFile(ThreeMfFile file)
@@ -101,7 +97,7 @@ namespace IxMilia.ThreeMf.Test
         {
             var file = new ThreeMfFile();
             var model = new ThreeMfModel();
-            model.Resources.Add(new ThreeMfTexture2D(StringToStream("texture content"), ThreeMfTextureContentType.Jpeg));
+            model.Resources.Add(new ThreeMfTexture2D(StringToBytes("texture content"), ThreeMfTextureContentType.Jpeg));
             file.Models.Add(model);
             using (var archive = GetArchiveFromFile(file))
             using (var modelStream = archive.GetEntry("3D/3dmodel.model").Open())
@@ -134,7 +130,7 @@ namespace IxMilia.ThreeMf.Test
         {
             var file = new ThreeMfFile();
             var model = new ThreeMfModel();
-            model.Resources.Add(new ThreeMfTexture2D(new MemoryStream(), ThreeMfTextureContentType.Jpeg));
+            model.Resources.Add(new ThreeMfTexture2D(new byte[0], ThreeMfTextureContentType.Jpeg));
             file.Models.Add(model);
 
             var expected = @"
@@ -154,8 +150,8 @@ namespace IxMilia.ThreeMf.Test
         {
             var file = new ThreeMfFile();
             var model = new ThreeMfModel();
-            model.Resources.Add(new ThreeMfTexture2D(new MemoryStream(), ThreeMfTextureContentType.Jpeg));
-            model.Resources.Add(new ThreeMfTexture2D(new MemoryStream(), ThreeMfTextureContentType.Png));
+            model.Resources.Add(new ThreeMfTexture2D(new byte[0], ThreeMfTextureContentType.Jpeg));
+            model.Resources.Add(new ThreeMfTexture2D(new byte[0], ThreeMfTextureContentType.Png));
             file.Models.Add(model);
 
             using (var archive = GetArchiveFromFile(file))

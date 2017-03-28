@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using IxMilia.ThreeMf.Collections;
@@ -16,7 +15,7 @@ namespace IxMilia.ThreeMf
 
         IEnumerable<IThreeMfPropertyItem> IThreeMfPropertyResource.PropertyItems => Bases;
 
-        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, Action<string, Stream> addArchiveEntry)
+        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, Action<string, byte[]> addArchiveEntry)
         {
             return new XElement(BaseMaterialsName,
                 new XAttribute(IdAttributeName, Id),

@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using IxMilia.ThreeMf.Collections;
@@ -87,7 +86,7 @@ namespace IxMilia.ThreeMf
             }
         }
 
-        internal static ThreeMfModel LoadXml(XElement root, Func<string, Stream> getArchiveEntry)
+        internal static ThreeMfModel LoadXml(XElement root, Func<string, byte[]> getArchiveEntry)
         {
             var model = new ThreeMfModel();
             model.ParseModelUnits(root.Attribute(UnitAttributeName)?.Value);
@@ -119,7 +118,7 @@ namespace IxMilia.ThreeMf
             return model;
         }
 
-        internal XElement ToXElement(Action<string, Stream> addArchiveEntry)
+        internal XElement ToXElement(Action<string, byte[]> addArchiveEntry)
         {
             // ensure build items are included
             var resourcesHash = new HashSet<ThreeMfResource>(Resources);
@@ -214,7 +213,7 @@ namespace IxMilia.ThreeMf
                     .Select(l => new XElement(MetadataName, new XAttribute(NameAttributeName, metadataType), l));
         }
 
-        private Dictionary<int, ThreeMfResource> ParseResources(XElement resources, Func<string, Stream> getArchiveEntry)
+        private Dictionary<int, ThreeMfResource> ParseResources(XElement resources, Func<string, byte[]> getArchiveEntry)
         {
             var resourceMap = new Dictionary<int, ThreeMfResource>();
             if (resources == null)

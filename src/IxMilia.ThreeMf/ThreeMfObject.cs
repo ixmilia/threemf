@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using IxMilia.ThreeMf.Collections;
@@ -46,7 +45,7 @@ namespace IxMilia.ThreeMf
             Mesh = new ThreeMfMesh();
         }
 
-        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, Action<string, Stream> addArchiveEntry)
+        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, Action<string, byte[]> addArchiveEntry)
         {
             return new XElement(ObjectName,
                 new XAttribute(IdAttributeName, Id),

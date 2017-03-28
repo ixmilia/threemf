@@ -72,19 +72,25 @@ namespace IxMilia.ThreeMf
                 WriteXmlToArchive(archive, rootRels, RelsEntryPath);
 
                 XElement modelRels = null;
-                var addArchiveEntry = new Action<string, Stream>((fullPath, entryStream) =>
+                var addArchiveEntry = new Action<string, byte[]>((fullPath, data) =>
                 {
                     if (fullPath == null || fullPath[0] != '/')
                     {
                         throw new InvalidOperationException($"Invalid archive entry path '{fullPath}'.");
                     }
 
+                    if (data == null)
+                    {
+                        throw new ArgumentNullException(nameof(data));
+                    }
+
                     // copy the content
                     var path = fullPath.Substring(1);
                     var entry = archive.CreateEntry(path);
                     using (var archiveEntryStream = entry.Open())
+                    using (var writer = new BinaryWriter(archiveEntryStream))
                     {
-                        entryStream.CopyTo(archiveEntryStream);
+                        writer.Write(data);
                     }
 
                     // ensure the content type is present
@@ -162,7 +168,7 @@ namespace IxMilia.ThreeMf
                 using (var modelStream = archive.GetEntryStream(modelFilePath))
                 {
                     var document = XDocument.Load(modelStream);
-                    var model = ThreeMfModel.LoadXml(document.Root, entryPath => archive.GetEntryStream(entryPath));
+                    var model = ThreeMfModel.LoadXml(document.Root, entryPath => archive.GetEntryBytes(entryPath));
                     var file = new ThreeMfFile();
                     file.Models.Add(model); // assume one model for now
                     return file;

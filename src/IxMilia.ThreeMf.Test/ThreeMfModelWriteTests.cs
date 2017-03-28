@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Xunit;
 
 namespace IxMilia.ThreeMf.Test
@@ -18,7 +17,7 @@ namespace IxMilia.ThreeMf.Test
         private string GetStrippedModelXml(ThreeMfModel model)
         {
             // don't want to specify the defaults in every test
-            return StripXmlns(model.ToXElement(new Action<string, Stream>((_, __) => { })).ToString())
+            return StripXmlns(model.ToXElement(new Action<string, byte[]>((_, __) => { })).ToString())
                 .Replace(@" xml:lang=""en-US""", "")
                 .Replace(@" unit=""millimeter""", "");
         }
@@ -355,7 +354,7 @@ namespace IxMilia.ThreeMf.Test
         public void WriteTexture2DTest()
         {
             var model = new ThreeMfModel();
-            var texture = new ThreeMfTexture2D(new MemoryStream(), ThreeMfTextureContentType.Jpeg);
+            var texture = new ThreeMfTexture2D(new byte[0], ThreeMfTextureContentType.Jpeg);
             texture.BoundingBox = new ThreeMfBoundingBox(0.0, 1.0, 2.0, 3.0);
             texture.TileStyleU = ThreeMfTileStyle.Mirror;
             model.Resources.Add(texture);
@@ -379,7 +378,7 @@ namespace IxMilia.ThreeMf.Test
         public void WriteTexture2DGroupTest()
         {
             var model = new ThreeMfModel();
-            var textureGroup = new ThreeMfTexture2DGroup(new ThreeMfTexture2D(new MemoryStream(), ThreeMfTextureContentType.Jpeg));
+            var textureGroup = new ThreeMfTexture2DGroup(new ThreeMfTexture2D(new byte[0], ThreeMfTextureContentType.Jpeg));
             textureGroup.Coordinates.Add(new ThreeMfTexture2DCoordinate(1.0, 2.0));
             model.Resources.Add(textureGroup);
 
