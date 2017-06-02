@@ -29,7 +29,8 @@ namespace IxMilia.ThreeMf
         private const string ModelContentType = "application/vnd.ms-package.3dmanufacturing-3dmodel+xml";
         private const string TextureContentType = "application/vnd.ms-package.3dmanufacturing-3dmodeltexture";
         private const string ContentTypesPath = "[Content_Types].xml";
-        private const string DefaultModelEntryPath = "/3D/3dmodel.model";
+        private const string DefaultModelEntryName = "/3D/3dmodel";
+        private const string ModelPathExtension = ".model";
         private const string RelsEntryPath = "_rels/.rels";
         private const string ModelRelationshipPath = "3D/_rels/3dmodel.model.rels";
         private const string DefaultRelationshipPrefix = "rel";
@@ -62,13 +63,20 @@ namespace IxMilia.ThreeMf
                     currentRelationshipId++;
                     return rel;
                 });
+                var currentModelSuffix = 0;
+                var nextModelFileName = new Func<string>(() =>
+                {
+                    var suffix = currentModelSuffix++ == 0 ? string.Empty : $"-{currentModelSuffix}";
+                    return string.Concat(DefaultModelEntryName, suffix, ModelPathExtension);
+                });
                 var seenContentTypes = new HashSet<string>() { "rels", "model" };
                 var contentTypes = new XElement(TypesName,
                     GetDefaultContentType(RelsExtension, RelsContentType),
                     GetDefaultContentType(ModelExtension, ModelContentType));
 
+                var modelPaths = Enumerable.Range(0, Models.Count).Select(_ => nextModelFileName()).ToList();
                 var rootRels = new XElement(RelationshipsName,
-                    GetRelationshipElement(DefaultModelEntryPath, nextRelationshipId(), ModelRelationshipType));
+                    modelPaths.Select(path => GetRelationshipElement(path, nextRelationshipId(), ModelRelationshipType)));
                 WriteXmlToArchive(archive, rootRels, RelsEntryPath);
 
                 XElement modelRels = null;
@@ -109,12 +117,16 @@ namespace IxMilia.ThreeMf
                     modelRels.Add(GetRelationshipElement(fullPath, nextRelationshipId(), TextureRelationshipType));
                 });
 
-                // TODO: handle more than one model
-                var model = Models.SingleOrDefault() ?? new ThreeMfModel();
-                var modelXml = model.ToXElement(addArchiveEntry);
-                var modelArchivePath = DefaultModelEntryPath.Substring(1); // trim the leading slash for ZipArchive
-                WriteXmlToArchive(archive, modelXml, modelArchivePath);
-                WriteXmlToArchive(archive, contentTypes, ContentTypesPath);
+                for (int i = 0; i < Models.Count; i++)
+                {
+                    var model = Models[i];
+                    var modelXml = model.ToXElement(addArchiveEntry);
+                    var modelPath = modelPaths[i];
+                    var modelArchivePath = modelPath.Substring(1); // trim the leading slash for ZipArchive
+                    WriteXmlToArchive(archive, modelXml, modelArchivePath);
+                    WriteXmlToArchive(archive, contentTypes, ContentTypesPath);
+                }
+
                 if (modelRels != null)
                 {
                     WriteXmlToArchive(archive, modelRels, ModelRelationshipPath);

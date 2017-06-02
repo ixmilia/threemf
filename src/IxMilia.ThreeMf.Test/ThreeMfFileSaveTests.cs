@@ -54,28 +54,62 @@ namespace IxMilia.ThreeMf.Test
   <Default Extension=""model"" ContentType=""application/vnd.ms-package.3dmanufacturing-3dmodel+xml"" />
 </Types>
 ".Trim();
-            var actual = GetEntryText(new ThreeMfFile(), "[Content_Types].xml");
+            var file = new ThreeMfFile();
+            file.Models.Add(new ThreeMfModel());
+            var actual = GetEntryText(file, "[Content_Types].xml");
             Assert.Equal(expected, actual);
         }
 
         [Fact]
-        public void EnsureRelationshipsTest()
+        public void EnsureZeroModelRelationshipsTest()
         {
-            // this file should be static
+            var expected = @"
+<?xml version=""1.0"" encoding=""utf-8""?>
+<Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"" />
+".Trim();
+            var file = new ThreeMfFile();
+            var actual = GetEntryText(file, "_rels/.rels");
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void EnsureSingleModelRelationshipTest()
+        {
             var expected = @"
 <?xml version=""1.0"" encoding=""utf-8""?>
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
   <Relationship Target=""/3D/3dmodel.model"" Id=""rel0"" Type=""http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"" />
 </Relationships>
 ".Trim();
-            var actual = GetEntryText(new ThreeMfFile(), "_rels/.rels");
+            var file = new ThreeMfFile();
+            file.Models.Add(new ThreeMfModel());
+            var actual = GetEntryText(file, "_rels/.rels");
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void EnsureMultipleModelRelationshipTest()
+        {
+            var expected = @"
+<?xml version=""1.0"" encoding=""utf-8""?>
+<Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
+  <Relationship Target=""/3D/3dmodel.model"" Id=""rel0"" Type=""http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"" />
+  <Relationship Target=""/3D/3dmodel-2.model"" Id=""rel1"" Type=""http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"" />
+</Relationships>
+".Trim();
+            var file = new ThreeMfFile();
+            file.Models.Add(new ThreeMfModel());
+            file.Models.Add(new ThreeMfModel());
+            var actual = GetEntryText(file, "_rels/.rels");
             Assert.Equal(expected, actual);
         }
 
         [Fact]
         public void EnsureModelXmlEncodingTest()
         {
-            var actual = GetEntryText(new ThreeMfFile(), "3D/3dmodel.model");
+            var file = new ThreeMfFile();
+            file.Models.Add(new ThreeMfModel());
+            var actual = GetEntryText(file, "3D/3dmodel.model");
             Assert.StartsWith(@"<?xml version=""1.0"" encoding=""utf-8""?>", actual);
         }
 
@@ -88,7 +122,25 @@ namespace IxMilia.ThreeMf.Test
                 file.Save(ms);
                 ms.Seek(0, SeekOrigin.Begin);
                 file = ThreeMfFile.Load(ms);
+                Assert.Equal(0, file.Models.Count);
+            }
+
+            file.Models.Add(new ThreeMfModel());
+            using (var ms = new MemoryStream())
+            {
+                file.Save(ms);
+                ms.Seek(0, SeekOrigin.Begin);
+                file = ThreeMfFile.Load(ms);
                 Assert.Equal(1, file.Models.Count);
+            }
+
+            file.Models.Add(new ThreeMfModel());
+            using (var ms = new MemoryStream())
+            {
+                file.Save(ms);
+                ms.Seek(0, SeekOrigin.Begin);
+                file = ThreeMfFile.Load(ms);
+                Assert.Equal(2, file.Models.Count);
             }
         }
 
