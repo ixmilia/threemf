@@ -14,14 +14,18 @@ namespace IxMilia.ThreeMf.Test
         public void LoadFromDiskTest()
         {
             var samplesDir = Path.Combine(Path.GetDirectoryName(typeof(ThreeMfFileLoadTests).GetTypeInfo().Assembly.Location), "Samples");
+            var loadedFiles = 0;
             foreach (var path in Directory.EnumerateFiles(samplesDir, "*.3mf", SearchOption.AllDirectories))
             {
                 using (var fs = new FileStream(path, FileMode.Open))
                 {
                     var file = ThreeMfFile.Load(fs);
                     var model = file.Models.Single();
+                    loadedFiles++;
                 }
             }
+
+            Assert.True(loadedFiles > 0, "No sample files were loaded.  Ensure all submodules have been initialized.");
         }
 
         [Fact]
