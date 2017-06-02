@@ -62,5 +62,51 @@ namespace IxMilia.ThreeMf.Test
                 Assert.Equal(ThreeMfModelUnits.Millimeter, model.ModelUnits);
             }
         }
+
+        [Fact]
+        public void ReadMultipleModelsTest()
+        {
+            using (var ms = new MemoryStream())
+            {
+                using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, true))
+                {
+                    {
+                        var entry = archive.CreateEntry("_rels/.rels");
+                        using (var stream = entry.Open())
+                        using (var writer = new StreamWriter(stream))
+                        {
+                            writer.WriteLine(@"<Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">");
+                            writer.WriteLine(@"  <Relationship Target=""/3D/3dmodel-1.model"" Id=""rel0"" Type=""http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"" />");
+                            writer.WriteLine(@"  <Relationship Target=""/3D/3dmodel-2.model"" Id=""rel1"" Type=""http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"" />");
+                            writer.WriteLine(@"</Relationships>");
+                        }
+                    }
+
+                    {
+                        var entry = archive.CreateEntry("3D/3dmodel-1.model");
+                        using (var stream = entry.Open())
+                        using (var writer = new StreamWriter(stream))
+                        {
+                            writer.WriteLine($@"<model unit=""millimeter"" xml:lang=""en-US"" xmlns=""{ThreeMfModel.ModelNamespace}""></model>");
+                        }
+                    }
+
+                    {
+                        var entry = archive.CreateEntry("3D/3dmodel-2.model");
+                        using (var stream = entry.Open())
+                        using (var writer = new StreamWriter(stream))
+                        {
+                            writer.WriteLine($@"<model unit=""inch"" xml:lang=""en-US"" xmlns=""{ThreeMfModel.ModelNamespace}""></model>");
+                        }
+                    }
+                }
+
+                ms.Seek(0, SeekOrigin.Begin);
+                var file = ThreeMfFile.Load(ms);
+                Assert.Equal(2, file.Models.Count);
+                Assert.Equal(ThreeMfModelUnits.Millimeter, file.Models.First().ModelUnits);
+                Assert.Equal(ThreeMfModelUnits.Inch, file.Models.Last().ModelUnits);
+            }
+        }
     }
 }

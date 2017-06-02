@@ -162,40 +162,43 @@ namespace IxMilia.ThreeMf
 
         public static ThreeMfFile Load(Stream stream)
         {
+            var file = new ThreeMfFile();
             using (var archive = new ZipArchive(stream))
             {
-                var modelFilePath = GetModelFilePath(archive);
-                using (var modelStream = archive.GetEntryStream(modelFilePath))
+                var relationshipDocument = GetRootRelationshipFile(archive);
+                foreach (var modelPath in GetModelFilePaths(relationshipDocument))
                 {
-                    var document = XDocument.Load(modelStream);
-                    var model = ThreeMfModel.LoadXml(document.Root, entryPath => archive.GetEntryBytes(entryPath));
-                    var file = new ThreeMfFile();
-                    file.Models.Add(model); // assume one model for now
-                    return file;
+                    using (var modelStream = archive.GetEntryStream(modelPath))
+                    {
+                        var document = XDocument.Load(modelStream);
+                        var model = ThreeMfModel.LoadXml(document.Root, entryPath => archive.GetEntryBytes(entryPath));
+                        file.Models.Add(model);
+                    }
                 }
             }
+
+            return file;
         }
 
-        private static string GetModelFilePath(ZipArchive archive)
+        private static XDocument GetRootRelationshipFile(ZipArchive archive)
         {
             using (var relsStream = archive.GetEntryStream(RelsEntryPath))
             {
                 var document = XDocument.Load(relsStream);
-                var firstRelationship = document.Root.Elements(RelationshipName).FirstOrDefault(e => e.Attribute(TypeAttributeName)?.Value == ModelRelationshipType);
-                if (firstRelationship == null)
-                {
-                    throw new ThreeMfPackageException("Package does not contain a root 3MF relation.");
-                }
-
-                var target = firstRelationship.AttributeValueOrThrow(TargetAttributeName, "Relationship target not specified.");
-                if (target.StartsWith("/"))
-                {
-                    // ZipArchive doesn't like the leading slash
-                    target = target.Substring(1);
-                }
-
-                return target;
+                return document;
             }
+        }
+
+        private static IEnumerable<XElement> GetRelationshipsOfType(XDocument relationshipDocument, string relationshipType)
+        {
+            return relationshipDocument.Root.Elements(RelationshipName).Where(e => e.Attribute(TypeAttributeName)?.Value == relationshipType);
+        }
+
+        private static IEnumerable<string> GetModelFilePaths(XDocument relationshipDocument)
+        {
+            return GetRelationshipsOfType(relationshipDocument, ModelRelationshipType)
+                .Select(rel => rel.AttributeValueOrThrow(TargetAttributeName, "Relationship target not specified."))
+                .Select(path => path.StartsWith("/") ? path.Substring(1) : path); // ZipArchive doesn't like the leading slash
         }
     }
 }
