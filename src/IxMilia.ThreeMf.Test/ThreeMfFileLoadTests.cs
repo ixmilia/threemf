@@ -88,5 +88,18 @@ namespace IxMilia.ThreeMf.Test
             Assert.Equal(ThreeMfModelUnits.Millimeter, file.Models.First().ModelUnits);
             Assert.Equal(ThreeMfModelUnits.Inch, file.Models.Last().ModelUnits);
         }
+
+        [Fact]
+        public void ReadZeroModelsTest()
+        {
+            var file = FileFromParts(
+                Tuple.Create("_rels/.rels", @"
+<Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
+</Relationships>
+")
+            );
+
+            Assert.Equal(0, file.Models.Count);
+        }
     }
 }
