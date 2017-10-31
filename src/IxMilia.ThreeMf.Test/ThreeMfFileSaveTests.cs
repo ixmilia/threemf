@@ -4,19 +4,13 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 using Xunit;
 
 namespace IxMilia.ThreeMf.Test
 {
-    public class ThreeMfFileSaveTests
+    public class ThreeMfFileSaveTests : ThreeMfAbstractTestBase
     {
-        private byte[] StringToBytes(string value)
-        {
-            return Encoding.UTF8.GetBytes(value);
-        }
-
         private ZipArchive GetArchiveFromFile(ThreeMfFile file)
         {
             var ms = new MemoryStream();
@@ -149,7 +143,7 @@ namespace IxMilia.ThreeMf.Test
         {
             var file = new ThreeMfFile();
             var model = new ThreeMfModel();
-            model.Resources.Add(new ThreeMfTexture2D(StringToBytes("texture content"), ThreeMfTextureContentType.Jpeg));
+            model.Resources.Add(new ThreeMfTexture2D(StringToBytes("texture content"), ThreeMfImageContentType.Jpeg));
             file.Models.Add(model);
             using (var archive = GetArchiveFromFile(file))
             using (var modelStream = archive.GetEntry("3D/3dmodel.model").Open())
@@ -163,7 +157,7 @@ namespace IxMilia.ThreeMf.Test
 
                 // ensure it looks correct and isn't an empty guid
                 Assert.NotEqual($"/3D/Textures/{new Guid().ToString("N")}.jpg", path);
-                Assert.StartsWith("/3D/Textures", path);
+                Assert.StartsWith("/3D/Textures/", path);
                 Assert.EndsWith(".jpg", path);
                 path = path.Substring(1);
 
@@ -182,7 +176,7 @@ namespace IxMilia.ThreeMf.Test
         {
             var file = new ThreeMfFile();
             var model = new ThreeMfModel();
-            model.Resources.Add(new ThreeMfTexture2D(new byte[0], ThreeMfTextureContentType.Jpeg));
+            model.Resources.Add(new ThreeMfTexture2D(new byte[0], ThreeMfImageContentType.Jpeg));
             file.Models.Add(model);
 
             var expected = @"
@@ -202,8 +196,8 @@ namespace IxMilia.ThreeMf.Test
         {
             var file = new ThreeMfFile();
             var model = new ThreeMfModel();
-            model.Resources.Add(new ThreeMfTexture2D(new byte[0], ThreeMfTextureContentType.Jpeg));
-            model.Resources.Add(new ThreeMfTexture2D(new byte[0], ThreeMfTextureContentType.Png));
+            model.Resources.Add(new ThreeMfTexture2D(new byte[0], ThreeMfImageContentType.Jpeg));
+            model.Resources.Add(new ThreeMfTexture2D(new byte[0], ThreeMfImageContentType.Png));
             file.Models.Add(model);
 
             using (var archive = GetArchiveFromFile(file))
@@ -216,6 +210,103 @@ namespace IxMilia.ThreeMf.Test
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
   <Relationship Target=""/{jpegPath}"" Id=""rel1"" Type=""http://schemas.microsoft.com/3dmanufacturing/2013/01/3dtexture"" />
   <Relationship Target=""/{pngPath}"" Id=""rel2"" Type=""http://schemas.microsoft.com/3dmanufacturing/2013/01/3dtexture"" />
+</Relationships>
+".Trim();
+                var actual = GetEntryText(archive, "3D/_rels/3dmodel.model.rels");
+                Assert.Equal(expected, actual);
+            }
+        }
+
+        [Fact]
+        public void EnsureThumbnailsAreWrittenTest()
+        {
+            var file = new ThreeMfFile();
+            var obj = new ThreeMfObject();
+            var model = new ThreeMfModel();
+            model.Resources.Add(new ThreeMfObject() { ThumbnailData = StringToBytes("jpeg thumbnail"), ThumbnailContentType = ThreeMfImageContentType.Jpeg });
+            file.Models.Add(model);
+            using (var archive = GetArchiveFromFile(file))
+            using (var modelStream = archive.GetEntry("3D/3dmodel.model").Open())
+            using (var reader = new StreamReader(modelStream))
+            {
+                var modelXml = XDocument.Parse(reader.ReadToEnd());
+                var objectElement = modelXml.Root.Element(ThreeMfModel.ResourcesName).Element(ThreeMfResource.ObjectName);
+
+                // get the path to the thumbnail
+                var path = objectElement.Attribute("thumbnail").Value;
+
+                // ensure it looks correct and isn't an empty guid
+                Assert.NotEqual($"{ThreeMfObject.ThumbnailPathPrefix}{new Guid().ToString("N")}.jpg", path);
+                Assert.StartsWith(ThreeMfObject.ThumbnailPathPrefix, path);
+                Assert.EndsWith(".jpg", path);
+                path = path.Substring(1);
+
+                // ensure that the item is present
+                using (var thumbnailStream = archive.GetEntry(path).Open())
+                using (var thumbnailReader = new StreamReader(thumbnailStream))
+                {
+                    // ensure that it's correct
+                    Assert.Equal("jpeg thumbnail", thumbnailReader.ReadToEnd());
+                }
+            }
+        }
+
+        [Fact]
+        public void EnsureThumbnailContentTypesArePresentTest()
+        {
+            var file = new ThreeMfFile();
+            var model = new ThreeMfModel();
+            model.Resources.Add(new ThreeMfObject() { ThumbnailData = new byte[0], ThumbnailContentType = ThreeMfImageContentType.Jpeg });
+            file.Models.Add(model);
+
+            using (var archive = GetArchiveFromFile(file))
+            using (var contentTypesStream = archive.GetEntry("[Content_Types].xml").Open())
+            using (var reader = new StreamReader(contentTypesStream))
+            {
+                var actual = reader.ReadToEnd();
+                var contentTypesXml = XDocument.Parse(actual);
+                var overrideElement = contentTypesXml.Root.Element(ThreeMfArchiveBuilder.OverrideName);
+
+                // get the path to the thumbnail
+                var path = overrideElement.Attribute("PartName").Value;
+
+                // ensure it looks correct and isn't an empty guid
+                Assert.NotEqual($"{ThreeMfObject.ThumbnailPathPrefix}{new Guid().ToString("N")}.jpg", path);
+                Assert.StartsWith(ThreeMfObject.ThumbnailPathPrefix, path);
+                Assert.EndsWith(".jpg", path);
+
+                // ensure the correct file contents
+                var expected = $@"
+<?xml version=""1.0"" encoding=""utf-8""?>
+<Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types"">
+  <Default Extension=""rels"" ContentType=""application/vnd.openxmlformats-package.relationships+xml"" />
+  <Default Extension=""model"" ContentType=""application/vnd.ms-package.3dmanufacturing-3dmodel+xml"" />
+  <Override PartName=""{path}"" ContentType=""image/jpeg"" />
+</Types>
+".Trim();
+                Assert.Equal(expected, actual);
+            }
+        }
+
+        [Fact]
+        public void EnsureThumbnailRelationshipsArePresentTest()
+        {
+            var file = new ThreeMfFile();
+            var model = new ThreeMfModel();
+            model.Resources.Add(new ThreeMfObject() { ThumbnailData = new byte[0], ThumbnailContentType = ThreeMfImageContentType.Jpeg });
+            model.Resources.Add(new ThreeMfObject() { ThumbnailData = new byte[0], ThumbnailContentType = ThreeMfImageContentType.Png });
+            file.Models.Add(model);
+
+            using (var archive = GetArchiveFromFile(file))
+            {
+                // get the actual thumbnail paths
+                var jpegPath = archive.Entries.Single(e => e.Name.EndsWith(".jpg")).FullName;
+                var pngPath = archive.Entries.Single(e => e.Name.EndsWith(".png")).FullName;
+                var expected = $@"
+<?xml version=""1.0"" encoding=""utf-8""?>
+<Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
+  <Relationship Target=""/{jpegPath}"" Id=""rel1"" Type=""http://schemas.openxmlformats.org/package/2006/relationships/metadata/thumbnail"" />
+  <Relationship Target=""/{pngPath}"" Id=""rel2"" Type=""http://schemas.openxmlformats.org/package/2006/relationships/metadata/thumbnail"" />
 </Relationships>
 ".Trim();
                 var actual = GetEntryText(archive, "3D/_rels/3dmodel.model.rels");

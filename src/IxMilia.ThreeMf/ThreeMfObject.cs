@@ -15,19 +15,22 @@ namespace IxMilia.ThreeMf
         private const string PartNumberAttributeName = "partnumber";
         private const string PropertyReferenceAttributeName = "pid";
         private const string PropertyIndexAttributeName = "pindex";
+        private const string ThumbnailAttributeName = "thumbnail";
         private const string TypeAttributeName = "type";
+        private const string ThumbnailRelationshipType = "http://schemas.openxmlformats.org/package/2006/relationships/metadata/thumbnail";
+
+        internal const string ThumbnailPathPrefix = "/3D/Thumbnails/";
 
         internal static XName MeshName = XName.Get("mesh", ThreeMfModel.ModelNamespace);
         internal static XName ComponentsName = XName.Get("components", ThreeMfModel.ModelNamespace);
-
-        // TODO: page 25
-        //   thumbnail = path to a 3d texture of jpeg or png that represents a rendered image of the object
 
         public ThreeMfObjectType Type { get; set; }
         public IThreeMfPropertyResource PropertyResource { get; set; }
         public int PropertyIndex { get; set; }
         public string PartNumber { get; set; }
         public string Name { get; set; }
+        public ThreeMfImageContentType ThumbnailContentType { get; set; }
+        public byte[] ThumbnailData { get; set; }
 
         private ThreeMfMesh _mesh;
 
@@ -45,8 +48,15 @@ namespace IxMilia.ThreeMf
             Mesh = new ThreeMfMesh();
         }
 
-        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, Action<string, byte[]> addArchiveEntry)
+        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, ThreeMfArchiveBuilder archiveBuilder)
         {
+            string thumbnailPath = null;
+            if (ThumbnailData != null)
+            {
+                thumbnailPath = string.Concat(ThumbnailPathPrefix, Guid.NewGuid().ToString("N"), ThumbnailContentType.ToExtensionString());
+                archiveBuilder.WriteBinaryDataToArchive(thumbnailPath, ThumbnailData, ThumbnailRelationshipType, ThumbnailContentType.ToContentTypeString(), overrideContentType: true);
+            }
+
             return new XElement(ObjectName,
                 new XAttribute(IdAttributeName, Id),
                 new XAttribute(TypeAttributeName, Type.ToString().ToLowerInvariant()),
@@ -57,13 +67,14 @@ namespace IxMilia.ThreeMf
                         new XAttribute(PropertyReferenceAttributeName, resourceMap[(ThreeMfResource)PropertyResource]),
                         new XAttribute(PropertyIndexAttributeName, PropertyIndex)
                     },
+                thumbnailPath == null ? null : new XAttribute(ThumbnailAttributeName, thumbnailPath),
                 PartNumber == null ? null : new XAttribute(PartNumberAttributeName, PartNumber),
                 Name == null ? null : new XAttribute(NameAttributeName, Name),
                 Mesh.ToXElement(resourceMap),
                 Components.Count == 0 ? null : new XElement(ComponentsName, Components.Select(c => c.ToXElement(resourceMap))));
         }
 
-        internal static ThreeMfObject ParseObject(XElement element, Dictionary<int, ThreeMfResource> resourceMap)
+        internal static ThreeMfObject ParseObject(XElement element, Dictionary<int, ThreeMfResource> resourceMap, Func<string, byte[]> getArchiveEntry)
         {
             var obj = new ThreeMfObject();
             obj.Id = element.AttributeIntValueOrThrow(IdAttributeName);
@@ -71,6 +82,13 @@ namespace IxMilia.ThreeMf
             obj.PartNumber = element.Attribute(PartNumberAttributeName)?.Value;
             obj.Name = element.Attribute(NameAttributeName)?.Value;
             obj.Mesh = ThreeMfMesh.ParseMesh(element.Element(MeshName), resourceMap);
+
+            var thumbnailPath = element.Attribute(ThumbnailAttributeName)?.Value;
+            if (thumbnailPath != null)
+            {
+                obj.ThumbnailData = getArchiveEntry(thumbnailPath);
+            }
+
             var components = element.Element(ComponentsName);
             if (components != null)
             {

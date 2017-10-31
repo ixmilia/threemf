@@ -10,7 +10,7 @@ namespace IxMilia.ThreeMf
     {
         protected const string IdAttributeName = "id";
 
-        protected static XName ObjectName = XName.Get("object", ThreeMfModel.ModelNamespace);
+        internal static XName ObjectName = XName.Get("object", ThreeMfModel.ModelNamespace);
         internal static XName BaseMaterialsName = XName.Get("basematerials", ThreeMfModel.ModelNamespace);
         internal static XName ColorGroupName = XName.Get("colorgroup", ThreeMfModel.MaterialNamespace);
         internal static XName Texture2DName = XName.Get("texture2d", ThreeMfModel.MaterialNamespace);
@@ -18,13 +18,13 @@ namespace IxMilia.ThreeMf
 
         public int Id { get; internal set; }
 
-        abstract internal XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, Action<string, byte[]> addArchiveEntry);
+        abstract internal XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, ThreeMfArchiveBuilder archiveBuilder);
 
         internal static ThreeMfResource ParseResource(XElement element, Dictionary<int, ThreeMfResource> resourceMap, Func<string, byte[]> getArchiveEntry)
         {
             if (element.Name == ObjectName)
             {
-                return ThreeMfObject.ParseObject(element, resourceMap);
+                return ThreeMfObject.ParseObject(element, resourceMap, getArchiveEntry);
             }
             else if (element.Name == BaseMaterialsName)
             {

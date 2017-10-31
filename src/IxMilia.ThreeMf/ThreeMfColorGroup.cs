@@ -1,6 +1,5 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -15,7 +14,7 @@ namespace IxMilia.ThreeMf
 
         IEnumerable<IThreeMfPropertyItem> IThreeMfPropertyResource.PropertyItems => Colors;
 
-        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, Action<string, byte[]> addArchiveEntry)
+        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, ThreeMfArchiveBuilder archiveBuilder)
         {
             return new XElement(ColorGroupName,
                 new XAttribute(IdAttributeName, Id),

@@ -7,20 +7,33 @@ using Xunit;
 
 namespace IxMilia.ThreeMf.Test
 {
-    public class ThreeMfModelLoadTests
+    public class ThreeMfModelLoadTests : ThreeMfAbstractTestBase
     {
-        internal static ThreeMfModel ParseXml(string contents)
+        internal static ThreeMfModel ParseXml(string contents, params Tuple<string, byte[]>[] archiveEntries)
         {
             var document = XDocument.Parse(contents);
-            var getArchiveEntry = new Func<string, byte[]>(_ => new byte[0]);
+            var getArchiveEntry = archiveEntries.Length == 0
+              ? new Func<string, byte[]>(_ => new byte[0]) // always return an empty array
+              : new Func<string, byte[]>(key =>
+              {
+                  foreach (var archiveEntry in archiveEntries ?? new Tuple<string, byte[]>[0])
+                  {
+                      if (archiveEntry.Item1 == key)
+                      {
+                          return archiveEntry.Item2;
+                      }
+                  }
+
+                  throw new Exception($"Archive entry '{key}' not found.");
+              });
             return ThreeMfModel.LoadXml(document.Root, getArchiveEntry);
         }
 
-        private ThreeMfModel FromContent(string content)
+        private ThreeMfModel FromContent(string content, params Tuple<string, byte[]>[] archiveEntries)
         {
             return ParseXml($@"<model xmlns=""{ThreeMfModel.ModelNamespace}"" xmlns:m=""{ThreeMfModel.MaterialNamespace}"">" +
                 content +
-                "</model>");
+                "</model>", archiveEntries);
         }
 
         private void AssertUnits(string unitsString, ThreeMfModelUnits expectedUnits)
@@ -315,7 +328,7 @@ namespace IxMilia.ThreeMf.Test
 ");
 
             var texture = (ThreeMfTexture2D)model.Resources.Single();
-            Assert.Equal(ThreeMfTextureContentType.Png, texture.ContentType);
+            Assert.Equal(ThreeMfImageContentType.Png, texture.ContentType);
             Assert.Equal(0.0, texture.BoundingBox.U);
             Assert.Equal(1.0, texture.BoundingBox.V);
             Assert.Equal(2.0, texture.BoundingBox.Width);
@@ -341,6 +354,23 @@ namespace IxMilia.ThreeMf.Test
             Assert.True(ReferenceEquals(texture, textureGroup.Texture));
             Assert.Equal(1.0, textureGroup.Coordinates.Single().U);
             Assert.Equal(2.0, textureGroup.Coordinates.Single().V);
+        }
+
+        [Fact]
+        public void ReadModelThumbnailTest()
+        {
+            var model = FromContent($@"
+<resources>
+  <object id=""1"" thumbnail=""{ThreeMfObject.ThumbnailPathPrefix}thumb.jpg"">
+    <mesh>
+      <vertices />
+      <triangles />
+    </mesh>
+  </object>
+</resources>
+", Tuple.Create($"{ThreeMfObject.ThumbnailPathPrefix}thumb.jpg", StringToBytes("jpeg thumbnail")));
+            var obj = (ThreeMfObject)model.Resources.Single();
+            Assert.Equal("jpeg thumbnail", BytesToString(obj.ThumbnailData));
         }
     }
 }
