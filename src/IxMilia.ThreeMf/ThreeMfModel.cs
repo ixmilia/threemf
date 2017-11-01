@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO.Packaging;
 using System.Linq;
 using System.Xml.Linq;
 using IxMilia.ThreeMf.Collections;
@@ -86,7 +87,7 @@ namespace IxMilia.ThreeMf
             }
         }
 
-        internal static ThreeMfModel LoadXml(XElement root, Func<string, byte[]> getArchiveEntry)
+        internal static ThreeMfModel LoadXml(XElement root, Package package)
         {
             var model = new ThreeMfModel();
             model.ParseModelUnits(root.Attribute(UnitAttributeName)?.Value);
@@ -112,7 +113,7 @@ namespace IxMilia.ThreeMf
             model.CreationDate = GetMetadataValue(root, Metadata_CreationDate);
             model.ModificationDate = GetMetadataValue(root, Metadata_ModificationDate);
 
-            var resourceMap = model.ParseResources(root.Element(ResourcesName), getArchiveEntry);
+            var resourceMap = model.ParseResources(root.Element(ResourcesName), package);
             model.ParseBuild(root.Element(BuildName), resourceMap);
 
             return model;
@@ -213,7 +214,7 @@ namespace IxMilia.ThreeMf
                     .Select(l => new XElement(MetadataName, new XAttribute(NameAttributeName, metadataType), l));
         }
 
-        private Dictionary<int, ThreeMfResource> ParseResources(XElement resources, Func<string, byte[]> getArchiveEntry)
+        private Dictionary<int, ThreeMfResource> ParseResources(XElement resources, Package package)
         {
             var resourceMap = new Dictionary<int, ThreeMfResource>();
             if (resources == null)
@@ -223,7 +224,7 @@ namespace IxMilia.ThreeMf
 
             foreach (var element in resources.Elements())
             {
-                var resource = ThreeMfResource.ParseResource(element, resourceMap, getArchiveEntry);
+                var resource = ThreeMfResource.ParseResource(element, resourceMap, package);
                 if (resource != null)
                 {
                     Resources.Add(resource);

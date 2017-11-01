@@ -1,6 +1,8 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
+using System.IO;
+using System.IO.Packaging;
 using System.Linq;
 using System.Xml.Linq;
 using Xunit;
@@ -9,31 +11,30 @@ namespace IxMilia.ThreeMf.Test
 {
     public class ThreeMfModelLoadTests : ThreeMfAbstractTestBase
     {
-        internal static ThreeMfModel ParseXml(string contents, params Tuple<string, byte[]>[] archiveEntries)
+        internal static ThreeMfModel ParseXml(string contents, params Tuple<string, string, byte[]>[] packageEntries)
         {
             var document = XDocument.Parse(contents);
-            var getArchiveEntry = archiveEntries.Length == 0
-              ? new Func<string, byte[]>(_ => new byte[0]) // always return an empty array
-              : new Func<string, byte[]>(key =>
-              {
-                  foreach (var archiveEntry in archiveEntries ?? new Tuple<string, byte[]>[0])
-                  {
-                      if (archiveEntry.Item1 == key)
-                      {
-                          return archiveEntry.Item2;
-                      }
-                  }
+            var dummyPackage = Package.Open(new MemoryStream(), FileMode.Create);
+            foreach (var packageEntry in packageEntries)
+            {
+                var uri = packageEntry.Item1;
+                var contentType = packageEntry.Item2;
+                var data = packageEntry.Item3;
+                var packagePart = dummyPackage.CreatePart(new Uri(uri, UriKind.RelativeOrAbsolute), contentType);
+                using (var partStream = packagePart.GetStream())
+                {
+                    partStream.Write(data, 0, data.Length);
+                }
+            }
 
-                  throw new Exception($"Archive entry '{key}' not found.");
-              });
-            return ThreeMfModel.LoadXml(document.Root, getArchiveEntry);
+            return ThreeMfModel.LoadXml(document.Root, dummyPackage);
         }
 
-        private ThreeMfModel FromContent(string content, params Tuple<string, byte[]>[] archiveEntries)
+        private ThreeMfModel FromContent(string content, params Tuple<string, string, byte[]>[] packageEntries)
         {
             return ParseXml($@"<model xmlns=""{ThreeMfModel.ModelNamespace}"" xmlns:m=""{ThreeMfModel.MaterialNamespace}"">" +
                 content +
-                "</model>", archiveEntries);
+                "</model>", packageEntries);
         }
 
         private void AssertUnits(string unitsString, ThreeMfModelUnits expectedUnits)
@@ -325,7 +326,8 @@ namespace IxMilia.ThreeMf.Test
 <resources>
   <m:texture2d id=""1"" path=""/3D/Textures/texture.png"" contenttype=""image/png"" box=""0 1 2 3"" tilestyleu=""mirror"" />
 </resources>
-");
+",
+                Tuple.Create("/3D/Textures/texture.png", "image/png", new byte[0]));
 
             var texture = (ThreeMfTexture2D)model.Resources.Single();
             Assert.Equal(ThreeMfImageContentType.Png, texture.ContentType);
@@ -347,7 +349,8 @@ namespace IxMilia.ThreeMf.Test
     <m:tex2coord u=""1"" v=""2"" />
   </m:texture2dgroup>
 </resources>
-");
+",
+                Tuple.Create("/3D/Textures/texture.png", "image/png", new byte[0]));
 
             var texture = (ThreeMfTexture2D)model.Resources.First();
             var textureGroup = (ThreeMfTexture2DGroup)model.Resources.Last();
@@ -368,7 +371,7 @@ namespace IxMilia.ThreeMf.Test
     </mesh>
   </object>
 </resources>
-", Tuple.Create($"{ThreeMfObject.ThumbnailPathPrefix}thumb.jpg", StringToBytes("jpeg thumbnail")));
+", Tuple.Create($"{ThreeMfObject.ThumbnailPathPrefix}thumb.jpg", "image/jpeg", StringToBytes("jpeg thumbnail")));
             var obj = (ThreeMfObject)model.Resources.Single();
             Assert.Equal("jpeg thumbnail", BytesToString(obj.ThumbnailData));
         }

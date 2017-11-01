@@ -4,10 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.IO.Packaging;
 using System.Linq;
 using System.Xml.Linq;
 using IxMilia.ThreeMf.Collections;
-using IxMilia.ThreeMf.Extensions;
 
 namespace IxMilia.ThreeMf
 {
@@ -63,43 +63,28 @@ namespace IxMilia.ThreeMf
 
         public static ThreeMfFile Load(Stream stream)
         {
-            var file = new ThreeMfFile();
-            using (var archive = new ZipArchive(stream))
+            using (var package = Package.Open(stream))
             {
-                var relationshipDocument = GetRootRelationshipFile(archive);
-                foreach (var modelPath in GetModelFilePaths(relationshipDocument))
+                return Load(package);
+            }
+        }
+
+        public static ThreeMfFile Load(Package package)
+        {
+            var file = new ThreeMfFile();
+            foreach (var modelRelationship in package.GetRelationshipsByType(ModelRelationshipType))
+            {
+                var modelUri = modelRelationship.TargetUri;
+                var modelPart = package.GetPart(modelUri);
+                using (var modelStream = modelPart.GetStream())
                 {
-                    using (var modelStream = archive.GetEntryStream(modelPath))
-                    {
-                        var document = XDocument.Load(modelStream);
-                        var model = ThreeMfModel.LoadXml(document.Root, entryPath => archive.GetEntryBytes(entryPath));
-                        file.Models.Add(model);
-                    }
+                    var document = XDocument.Load(modelStream);
+                    var model = ThreeMfModel.LoadXml(document.Root, package);
+                    file.Models.Add(model);
                 }
             }
 
             return file;
-        }
-
-        private static XDocument GetRootRelationshipFile(ZipArchive archive)
-        {
-            using (var relsStream = archive.GetEntryStream(RelsEntryPath))
-            {
-                var document = XDocument.Load(relsStream);
-                return document;
-            }
-        }
-
-        private static IEnumerable<XElement> GetRelationshipsOfType(XDocument relationshipDocument, string relationshipType)
-        {
-            return relationshipDocument.Root.Elements(RelationshipName).Where(e => e.Attribute(TypeAttributeName)?.Value == relationshipType);
-        }
-
-        private static IEnumerable<string> GetModelFilePaths(XDocument relationshipDocument)
-        {
-            return GetRelationshipsOfType(relationshipDocument, ModelRelationshipType)
-                .Select(rel => rel.AttributeValueOrThrow(TargetAttributeName, "Relationship target not specified."))
-                .Select(path => path.StartsWith("/") ? path.Substring(1) : path); // ZipArchive doesn't like the leading slash
         }
     }
 }

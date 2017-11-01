@@ -1,7 +1,7 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System;
 using System.Collections.Generic;
+using System.IO.Packaging;
 using System.Xml.Linq;
 
 namespace IxMilia.ThreeMf
@@ -20,11 +20,11 @@ namespace IxMilia.ThreeMf
 
         abstract internal XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, ThreeMfArchiveBuilder archiveBuilder);
 
-        internal static ThreeMfResource ParseResource(XElement element, Dictionary<int, ThreeMfResource> resourceMap, Func<string, byte[]> getArchiveEntry)
+        internal static ThreeMfResource ParseResource(XElement element, Dictionary<int, ThreeMfResource> resourceMap, Package package)
         {
             if (element.Name == ObjectName)
             {
-                return ThreeMfObject.ParseObject(element, resourceMap, getArchiveEntry);
+                return ThreeMfObject.ParseObject(element, resourceMap, package);
             }
             else if (element.Name == BaseMaterialsName)
             {
@@ -36,7 +36,7 @@ namespace IxMilia.ThreeMf
             }
             else if (element.Name == Texture2DName)
             {
-                return ThreeMfTexture2D.ParseTexture(element, getArchiveEntry);
+                return ThreeMfTexture2D.ParseTexture(element, package);
             }
             else if (element.Name == Texture2DGroupName)
             {

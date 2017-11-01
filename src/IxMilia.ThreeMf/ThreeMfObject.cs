@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO.Packaging;
 using System.Linq;
 using System.Xml.Linq;
 using IxMilia.ThreeMf.Collections;
@@ -74,7 +75,7 @@ namespace IxMilia.ThreeMf
                 Components.Count == 0 ? null : new XElement(ComponentsName, Components.Select(c => c.ToXElement(resourceMap))));
         }
 
-        internal static ThreeMfObject ParseObject(XElement element, Dictionary<int, ThreeMfResource> resourceMap, Func<string, byte[]> getArchiveEntry)
+        internal static ThreeMfObject ParseObject(XElement element, Dictionary<int, ThreeMfResource> resourceMap, Package package)
         {
             var obj = new ThreeMfObject();
             obj.Id = element.AttributeIntValueOrThrow(IdAttributeName);
@@ -86,7 +87,7 @@ namespace IxMilia.ThreeMf
             var thumbnailPath = element.Attribute(ThumbnailAttributeName)?.Value;
             if (thumbnailPath != null)
             {
-                obj.ThumbnailData = getArchiveEntry(thumbnailPath);
+                obj.ThumbnailData = package.GetPartBytes(thumbnailPath);
             }
 
             var components = element.Element(ComponentsName);

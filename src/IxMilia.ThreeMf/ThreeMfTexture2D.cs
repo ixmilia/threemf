@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO.Packaging;
 using System.Xml.Linq;
 using IxMilia.ThreeMf.Extensions;
 
@@ -50,11 +51,11 @@ namespace IxMilia.ThreeMf
                 TileStyleV == ThreeMfTileStyle.Wrap ? null : new XAttribute(TileStyleVAttributeName, TileStyleV.ToTileStyleString()));
         }
 
-        internal static ThreeMfTexture2D ParseTexture(XElement element, Func<string, byte[]> getArchiveEntry)
+        internal static ThreeMfTexture2D ParseTexture(XElement element, Package package)
         {
             var path = element.AttributeValueOrThrow(PathAttributeName);
             var id = element.AttributeIntValueOrThrow(IdAttributeName);
-            var textureBytes = getArchiveEntry(path);
+            var textureBytes = package.GetPartBytes(path);
             var contentType = ThreeMfImageContentTypeExtensions.ParseContentType(element.AttributeValueOrThrow(ContentTypeAttributeName));
             var texture = new ThreeMfTexture2D(textureBytes, contentType)
             {
