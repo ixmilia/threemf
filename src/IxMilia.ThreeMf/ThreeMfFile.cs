@@ -27,6 +27,14 @@ namespace IxMilia.ThreeMf
 
         public IList<ThreeMfModel> Models { get; } = new ListNonNull<ThreeMfModel>();
 
+        public void Save(string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Create))
+            {
+                Save(stream);
+            }
+        }
+
         public void Save(Stream stream)
         {
             using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
@@ -59,6 +67,14 @@ namespace IxMilia.ThreeMf
                 new XAttribute(TargetAttributeName, target),
                 new XAttribute(IdAttributeName, id),
                 new XAttribute(TypeAttributeName, type));
+        }
+
+        public static ThreeMfFile Load(string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Open))
+            {
+                return Load(stream);
+            }
         }
 
         public static ThreeMfFile Load(Stream stream)

@@ -38,6 +38,23 @@ namespace IxMilia.ThreeMf.Test
         }
 
         [Fact]
+        public void FileSystemAPITest()
+        {
+            var filePath = Path.GetTempFileName();
+            var file = new ThreeMfFile();
+            file.Save(filePath);
+            var roundTripFile = ThreeMfFile.Load(filePath);
+
+            try
+            {
+                File.Delete(filePath);
+            }
+            catch
+            {
+            }
+        }
+
+        [Fact]
         public void EnsureContentTypesTest()
         {
             // this file should be static

@@ -14,11 +14,7 @@ using System.IO;
 using IxMilia.ThreeMf;
 // ...
 
-ThreeMfFile file;
-using (FileStream fs = new FileStream(@"C:\Path\To\File.3mf", FileMode.Open))
-{
-    file = ThreeMfFile.Load(fs);
-}
+ThreeMfFile file = ThreeMfFile.Load(@"C:\Path\To\File.3mf");
 
 // use `file` here
 ```
