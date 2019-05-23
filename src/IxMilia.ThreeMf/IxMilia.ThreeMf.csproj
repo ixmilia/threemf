@@ -9,7 +9,7 @@
     <AssemblyName>IxMilia.ThreeMf</AssemblyName>
     <PackageId>IxMilia.ThreeMf</PackageId>
     <PackageTags>CAD;3MF</PackageTags>
-    <PackageProjectUrl>https://github.com/IxMilia/ThreeMf</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/ixmilia/threemf</PackageProjectUrl>
     <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
 
     <!-- SourceLink settings -->
