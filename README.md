@@ -21,11 +21,7 @@ ThreeMfFile file = ThreeMfFile.Load(@"C:\Path\To\File.3mf");
 
 ## Building locally
 
-Requirements to build locally are:
-
-- [Latest .NET Core SDK](https://github.com/dotnet/cli/releases)  As of this writing the following was also required on Ubuntu 14.04:
-
-`sudo apt-get install dotnet-sharedframework-microsoft.netcore.app-1.0.3`
+To build locally, install the [latest .NET Core 3.0 SDK](https://dotnet.microsoft.com/download).
 
 ## 3MF Reference
 
