@@ -82,7 +82,12 @@ namespace IxMilia.ThreeMf
             obj.Type = ParseObjectType(element.Attribute(TypeAttributeName)?.Value);
             obj.PartNumber = element.Attribute(PartNumberAttributeName)?.Value;
             obj.Name = element.Attribute(NameAttributeName)?.Value;
-            obj.Mesh = ThreeMfMesh.ParseMesh(element.Element(MeshName), resourceMap);
+
+            var meshElement = element.Element(MeshName);
+            if (meshElement != null)
+            {
+                obj.Mesh = ThreeMfMesh.ParseMesh(meshElement, resourceMap);
+            }
 
             var thumbnailPath = element.Attribute(ThumbnailAttributeName)?.Value;
             if (thumbnailPath != null)
