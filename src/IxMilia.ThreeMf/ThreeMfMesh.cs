@@ -15,8 +15,8 @@ namespace IxMilia.ThreeMf
 
         internal XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap)
         {
-            var vertices = Triangles.SelectMany(t => new[] { t.V1, t.V2, t.V3 }).Distinct().ToList();
-            var verticesXml = vertices.Select(v => v.ToXElement());
+            var vertices = Triangles.SelectMany(t => new[] { t.V1, t.V2, t.V3 }).Distinct().Select((v, i) => new { v, i }).ToDictionary(x => x.v, x => x.i);
+            var verticesXml = vertices.Select(v => v.Key.ToXElement());
             var trianglesXml = Triangles.Select(t => t.ToXElement(vertices, resourceMap));
             return new XElement(ThreeMfObject.MeshName,
                 new XElement(VerticesName, verticesXml),

@@ -38,12 +38,12 @@ namespace IxMilia.ThreeMf
             V3PropertyIndex = null;
         }
 
-        internal XElement ToXElement(List<ThreeMfVertex> vertices, Dictionary<ThreeMfResource, int> resourceMap)
+        internal XElement ToXElement(Dictionary<ThreeMfVertex, int> vertices, Dictionary<ThreeMfResource, int> resourceMap)
         {
             return new XElement(TriangleName,
-                new XAttribute(V1AttributeName, GetVertexIndex(vertices, V1)),
-                new XAttribute(V2AttributeName, GetVertexIndex(vertices, V2)),
-                new XAttribute(V3AttributeName, GetVertexIndex(vertices, V3)),
+                new XAttribute(V1AttributeName, vertices[V1]),
+                new XAttribute(V2AttributeName, vertices[V2]),
+                new XAttribute(V3AttributeName, vertices[V3]),
                 PropertyResource == null
                     ? null
                     : new[]
@@ -53,11 +53,6 @@ namespace IxMilia.ThreeMf
                         V2PropertyIndex == null ? null : new XAttribute(V2PropertyAttributeName, V2PropertyIndex.GetValueOrDefault()),
                         V3PropertyIndex == null ? null : new XAttribute(V3PropertyAttributeName, V3PropertyIndex.GetValueOrDefault())
                     });
-        }
-
-        private static int GetVertexIndex(List<ThreeMfVertex> vertices, ThreeMfVertex item)
-        {
-            return vertices.IndexOf(item);
         }
 
         internal static ThreeMfTriangle ParseTriangle(XElement triangleElement, IList<ThreeMfVertex> vertices, Dictionary<int, ThreeMfResource> resourceMap)
