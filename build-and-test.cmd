@@ -20,7 +20,7 @@ if /i "%1" == "-notest" (
 )
 
 echo Unsupported argument: %1
-goto error
+exit /b 1
 
 :argsdone
 
@@ -34,5 +34,5 @@ if errorlevel 1 exit /b 1
 :: test
 if /i "%runtests%" == "true" (
     dotnet test "%SOLUTION%" -c %configuration% --no-restore --no-build
-    if errorlevel 1 goto error
+    if errorlevel 1 exit /b 1
 )
