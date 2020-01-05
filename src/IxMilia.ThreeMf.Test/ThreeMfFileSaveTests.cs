@@ -3,6 +3,7 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.IO.Packaging;
 using System.Linq;
 using System.Xml.Linq;
 using Xunit;
@@ -16,7 +17,20 @@ namespace IxMilia.ThreeMf.Test
             var ms = new MemoryStream();
             file.Save(ms);
             ms.Seek(0, SeekOrigin.Begin);
-            return new ZipArchive(ms);
+            return GetArchiveFromStream(ms);
+        }
+
+        private ZipArchive GetArchiveFromStream(Stream stream)
+        {
+            return new ZipArchive(stream);
+        }
+
+        private ZipArchiveEntry GetEntryFromFile(ThreeMfFile file, string entryPath)
+        {
+            using (var archive = GetArchiveFromFile(file))
+            {
+                return archive.GetEntry(entryPath);
+            }
         }
 
         private string GetEntryText(ThreeMfFile file, string entryPath)
@@ -25,6 +39,12 @@ namespace IxMilia.ThreeMf.Test
             {
                 return GetEntryText(archive, entryPath);
             }
+        }
+
+        private XElement GetXmlFromFile(ThreeMfFile file, string entryPath)
+        {
+            var actualText = GetEntryText(file, entryPath);
+            return XDocument.Parse(actualText).Root;
         }
 
         private string GetEntryText(ZipArchive archive, string entryPath)
@@ -61,58 +81,47 @@ namespace IxMilia.ThreeMf.Test
             var expected = @"
 <?xml version=""1.0"" encoding=""utf-8""?>
 <Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types"">
-  <Default Extension=""rels"" ContentType=""application/vnd.openxmlformats-package.relationships+xml"" />
   <Default Extension=""model"" ContentType=""application/vnd.ms-package.3dmanufacturing-3dmodel+xml"" />
+  <Default Extension=""rels"" ContentType=""application/vnd.openxmlformats-package.relationships+xml"" />
 </Types>
 ".Trim();
             var file = new ThreeMfFile();
             file.Models.Add(new ThreeMfModel());
             var actual = GetEntryText(file, "[Content_Types].xml");
+
+            // format contents
+            expected = XDocument.Parse(expected).ToString();
+            actual = XDocument.Parse(actual).ToString();
             Assert.Equal(expected, actual);
         }
 
         [Fact]
         public void EnsureZeroModelRelationshipsTest()
         {
-            var expected = @"
-<?xml version=""1.0"" encoding=""utf-8""?>
-<Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"" />
-".Trim();
             var file = new ThreeMfFile();
-            var actual = GetEntryText(file, "_rels/.rels");
-            Assert.Equal(expected, actual);
+            var relsEntry = GetEntryFromFile(file, "_rels/.rels");
+            Assert.Null(relsEntry);
         }
 
         [Fact]
         public void EnsureSingleModelRelationshipTest()
         {
-            var expected = @"
-<?xml version=""1.0"" encoding=""utf-8""?>
-<Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
-  <Relationship Target=""/3D/3dmodel.model"" Id=""rel0"" Type=""http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"" />
-</Relationships>
-".Trim();
             var file = new ThreeMfFile();
             file.Models.Add(new ThreeMfModel());
-            var actual = GetEntryText(file, "_rels/.rels");
-            Assert.Equal(expected, actual);
+            var relsXml = GetXmlFromFile(file, "_rels/.rels");
+            var relationship = relsXml.Elements().Single();
+            Assert.Equal("http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel", relationship.Attribute("Type").Value);
+            Assert.Equal("/3D/3dmodel.model", relationship.Attribute("Target").Value);
         }
 
         [Fact]
         public void EnsureMultipleModelRelationshipTest()
         {
-            var expected = @"
-<?xml version=""1.0"" encoding=""utf-8""?>
-<Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
-  <Relationship Target=""/3D/3dmodel.model"" Id=""rel0"" Type=""http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"" />
-  <Relationship Target=""/3D/3dmodel-2.model"" Id=""rel1"" Type=""http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"" />
-</Relationships>
-".Trim();
             var file = new ThreeMfFile();
             file.Models.Add(new ThreeMfModel());
             file.Models.Add(new ThreeMfModel());
-            var actual = GetEntryText(file, "_rels/.rels");
-            Assert.Equal(expected, actual);
+            var relsXml = GetXmlFromFile(file, "_rels/.rels");
+            Assert.Equal(2, relsXml.Elements().Count());
         }
 
         [Fact]
@@ -189,26 +198,6 @@ namespace IxMilia.ThreeMf.Test
         }
 
         [Fact]
-        public void EnsureTextureContentTypesArePresentTest()
-        {
-            var file = new ThreeMfFile();
-            var model = new ThreeMfModel();
-            model.Resources.Add(new ThreeMfTexture2D(new byte[0], ThreeMfImageContentType.Jpeg));
-            file.Models.Add(model);
-
-            var expected = @"
-<?xml version=""1.0"" encoding=""utf-8""?>
-<Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types"">
-  <Default Extension=""rels"" ContentType=""application/vnd.openxmlformats-package.relationships+xml"" />
-  <Default Extension=""model"" ContentType=""application/vnd.ms-package.3dmanufacturing-3dmodel+xml"" />
-  <Default Extension=""jpg"" ContentType=""application/vnd.ms-package.3dmanufacturing-3dmodeltexture"" />
-</Types>
-".Trim();
-            var actual = GetEntryText(file, "[Content_Types].xml");
-            Assert.Equal(expected, actual);
-        }
-
-        [Fact]
         public void EnsureTextureRelationshipsArePresentTest()
         {
             var file = new ThreeMfFile();
@@ -225,11 +214,23 @@ namespace IxMilia.ThreeMf.Test
                 var expected = $@"
 <?xml version=""1.0"" encoding=""utf-8""?>
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
-  <Relationship Target=""/{jpegPath}"" Id=""rel1"" Type=""http://schemas.microsoft.com/3dmanufacturing/2013/01/3dtexture"" />
-  <Relationship Target=""/{pngPath}"" Id=""rel2"" Type=""http://schemas.microsoft.com/3dmanufacturing/2013/01/3dtexture"" />
+  <Relationship Type=""http://schemas.microsoft.com/3dmanufacturing/2013/01/3dtexture"" Target=""/{jpegPath}"" Id=""rel1"" />
+  <Relationship Type=""http://schemas.microsoft.com/3dmanufacturing/2013/01/3dtexture"" Target=""/{pngPath}"" Id=""rel2"" />
 </Relationships>
 ".Trim();
                 var actual = GetEntryText(archive, "3D/_rels/3dmodel.model.rels");
+
+                // format contents
+                expected = XDocument.Parse(expected).ToString();
+                var actualXml = XDocument.Parse(actual);
+                var relNumber = 1;
+                foreach (var element in actualXml.Root.Elements())
+                {
+                    // normalize relationship ids
+                    element.Attribute("Id").Value = $"rel{relNumber++}";
+                }
+
+                actual = actualXml.ToString();
                 Assert.Equal(expected, actual);
             }
         }
@@ -269,43 +270,6 @@ namespace IxMilia.ThreeMf.Test
         }
 
         [Fact]
-        public void EnsureThumbnailContentTypesArePresentTest()
-        {
-            var file = new ThreeMfFile();
-            var model = new ThreeMfModel();
-            model.Resources.Add(new ThreeMfObject() { ThumbnailData = new byte[0], ThumbnailContentType = ThreeMfImageContentType.Jpeg });
-            file.Models.Add(model);
-
-            using (var archive = GetArchiveFromFile(file))
-            using (var contentTypesStream = archive.GetEntry("[Content_Types].xml").Open())
-            using (var reader = new StreamReader(contentTypesStream))
-            {
-                var actual = reader.ReadToEnd();
-                var contentTypesXml = XDocument.Parse(actual);
-                var overrideElement = contentTypesXml.Root.Element(ThreeMfArchiveBuilder.OverrideName);
-
-                // get the path to the thumbnail
-                var path = overrideElement.Attribute("PartName").Value;
-
-                // ensure it looks correct and isn't an empty guid
-                Assert.NotEqual($"{ThreeMfObject.ThumbnailPathPrefix}{new Guid().ToString("N")}.jpg", path);
-                Assert.StartsWith(ThreeMfObject.ThumbnailPathPrefix, path);
-                Assert.EndsWith(".jpg", path);
-
-                // ensure the correct file contents
-                var expected = $@"
-<?xml version=""1.0"" encoding=""utf-8""?>
-<Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types"">
-  <Default Extension=""rels"" ContentType=""application/vnd.openxmlformats-package.relationships+xml"" />
-  <Default Extension=""model"" ContentType=""application/vnd.ms-package.3dmanufacturing-3dmodel+xml"" />
-  <Override PartName=""{path}"" ContentType=""image/jpeg"" />
-</Types>
-".Trim();
-                Assert.Equal(expected, actual);
-            }
-        }
-
-        [Fact]
         public void EnsureThumbnailRelationshipsArePresentTest()
         {
             var file = new ThreeMfFile();
@@ -314,20 +278,27 @@ namespace IxMilia.ThreeMf.Test
             model.Resources.Add(new ThreeMfObject() { ThumbnailData = new byte[0], ThumbnailContentType = ThreeMfImageContentType.Png });
             file.Models.Add(model);
 
-            using (var archive = GetArchiveFromFile(file))
+            using (var zipStream = new MemoryStream())
+            using (var packageStream = new MemoryStream())
             {
-                // get the actual thumbnail paths
-                var jpegPath = archive.Entries.Single(e => e.Name.EndsWith(".jpg")).FullName;
-                var pngPath = archive.Entries.Single(e => e.Name.EndsWith(".png")).FullName;
-                var expected = $@"
-<?xml version=""1.0"" encoding=""utf-8""?>
-<Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
-  <Relationship Target=""/{jpegPath}"" Id=""rel1"" Type=""http://schemas.openxmlformats.org/package/2006/relationships/metadata/thumbnail"" />
-  <Relationship Target=""/{pngPath}"" Id=""rel2"" Type=""http://schemas.openxmlformats.org/package/2006/relationships/metadata/thumbnail"" />
-</Relationships>
-".Trim();
-                var actual = GetEntryText(archive, "3D/_rels/3dmodel.model.rels");
-                Assert.Equal(expected, actual);
+                // save file to stream and duplicate it so it can be re-opened as both a simple zip file and a package to validate structure
+                file.Save(zipStream);
+                zipStream.Seek(0, SeekOrigin.Begin);
+                zipStream.CopyTo(packageStream);
+                zipStream.Seek(0, SeekOrigin.Begin);
+                packageStream.Seek(0, SeekOrigin.Begin);
+                using (var archive = GetArchiveFromStream(zipStream))
+                using (var package = Package.Open(packageStream))
+                {
+                    // get the actual thumbnail paths
+                    var jpegPath = "/" + archive.Entries.Single(e => e.Name.EndsWith(".jpg")).FullName;
+                    var pngPath = "/" + archive.Entries.Single(e => e.Name.EndsWith(".png")).FullName;
+                    var modelPart = package.GetPart(new Uri("/3D/3dmodel.model", UriKind.RelativeOrAbsolute));
+                    var rels = modelPart.GetRelationships().ToList();
+                    Assert.Equal(2, rels.Count);
+                    Assert.Equal(jpegPath, rels[0].TargetUri.ToString());
+                    Assert.Equal(pngPath, rels[1].TargetUri.ToString());
+                }
             }
         }
     }

@@ -22,7 +22,7 @@ namespace IxMilia.ThreeMf
             Texture = texture;
         }
 
-        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, ThreeMfArchiveBuilder archiveBuilder)
+        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap)
         {
             return new XElement(Texture2DGroupName,
                 new XAttribute(IdAttributeName, Id),

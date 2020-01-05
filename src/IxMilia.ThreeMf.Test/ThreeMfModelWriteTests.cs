@@ -1,6 +1,8 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Packaging;
 using Xunit;
 
 namespace IxMilia.ThreeMf.Test
@@ -16,8 +18,8 @@ namespace IxMilia.ThreeMf.Test
         private string GetStrippedModelXml(ThreeMfModel model)
         {
             // don't want to specify the defaults in every test
-            var archiveBuilder = new ThreeMfTestArchiveBuilder();
-            return StripXmlns(model.ToXElement(archiveBuilder).ToString())
+            var dummyPackage = Package.Open(new MemoryStream(), FileMode.Create);
+            return StripXmlns(model.ToXElement(dummyPackage).ToString())
                 .Replace(@" xml:lang=""en-US""", "")
                 .Replace(@" unit=""millimeter""", "");
         }

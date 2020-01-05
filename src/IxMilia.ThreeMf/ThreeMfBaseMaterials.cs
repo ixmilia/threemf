@@ -14,7 +14,7 @@ namespace IxMilia.ThreeMf
 
         IEnumerable<IThreeMfPropertyItem> IThreeMfPropertyResource.PropertyItems => Bases;
 
-        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, ThreeMfArchiveBuilder archiveBuilder)
+        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap)
         {
             return new XElement(BaseMaterialsName,
                 new XAttribute(IdAttributeName, Id),

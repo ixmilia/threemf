@@ -34,6 +34,7 @@ namespace IxMilia.ThreeMf
         public byte[] ThumbnailData { get; set; }
 
         private ThreeMfMesh _mesh;
+        private Uri _thumbnailUri;
 
         public ThreeMfMesh Mesh
         {
@@ -49,13 +50,17 @@ namespace IxMilia.ThreeMf
             Mesh = new ThreeMfMesh();
         }
 
-        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, ThreeMfArchiveBuilder archiveBuilder)
+        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap)
         {
             string thumbnailPath = null;
             if (ThumbnailData != null)
             {
                 thumbnailPath = string.Concat(ThumbnailPathPrefix, Guid.NewGuid().ToString("N"), ThumbnailContentType.ToExtensionString());
-                archiveBuilder.WriteBinaryDataToArchive(thumbnailPath, ThumbnailData, ThumbnailRelationshipType, ThumbnailContentType.ToContentTypeString(), overrideContentType: true);
+                _thumbnailUri = new Uri(thumbnailPath, UriKind.RelativeOrAbsolute);
+            }
+            else
+            {
+                _thumbnailUri = null;
             }
 
             return new XElement(ObjectName,
@@ -73,6 +78,15 @@ namespace IxMilia.ThreeMf
                 Name == null ? null : new XAttribute(NameAttributeName, Name),
                 Mesh.ToXElement(resourceMap),
                 Components.Count == 0 ? null : new XElement(ComponentsName, Components.Select(c => c.ToXElement(resourceMap))));
+        }
+
+        internal override void AfterPartAdded(Package package, PackagePart packagePart)
+        {
+            if (_thumbnailUri != null)
+            {
+                package.WriteBinary(_thumbnailUri.ToString(), ThumbnailContentType.ToContentTypeString(), ThumbnailData);
+                packagePart.CreateRelationship(_thumbnailUri, TargetMode.Internal, ThumbnailRelationshipType);
+            }
         }
 
         internal static ThreeMfObject ParseObject(XElement element, Dictionary<int, ThreeMfResource> resourceMap, Package package)

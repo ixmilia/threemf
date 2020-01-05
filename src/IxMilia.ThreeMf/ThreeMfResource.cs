@@ -18,7 +18,11 @@ namespace IxMilia.ThreeMf
 
         public int Id { get; internal set; }
 
-        abstract internal XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, ThreeMfArchiveBuilder archiveBuilder);
+        abstract internal XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap);
+
+        virtual internal void AfterPartAdded(Package package, PackagePart packagePart)
+        {
+        }
 
         internal static ThreeMfResource ParseResource(XElement element, Dictionary<int, ThreeMfResource> resourceMap, Package package)
         {

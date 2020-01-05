@@ -1,5 +1,6 @@
 // Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System.IO;
 using System.Text;
 
 namespace IxMilia.ThreeMf.Test
@@ -14,6 +15,17 @@ namespace IxMilia.ThreeMf.Test
         public static string BytesToString(byte[] data)
         {
             return Encoding.UTF8.GetString(data);
+        }
+
+        public static ThreeMfFile RoundTripFile(ThreeMfFile file)
+        {
+            using (var ms = new MemoryStream())
+            {
+                file.Save(ms);
+                ms.Seek(0, SeekOrigin.Begin);
+                var file2 = ThreeMfFile.Load(ms);
+                return file2;
+            }
         }
     }
 }

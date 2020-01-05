@@ -119,7 +119,7 @@ namespace IxMilia.ThreeMf
             return model;
         }
 
-        internal XElement ToXElement(ThreeMfArchiveBuilder archiveBuilder)
+        internal XElement ToXElement(Package package)
         {
             // ensure build items are included
             var resourcesHash = new HashSet<ThreeMfResource>(Resources);
@@ -199,10 +199,18 @@ namespace IxMilia.ThreeMf
                 GetMetadataXElements(Metadata_CreationDate, CreationDate),
                 GetMetadataXElements(Metadata_ModificationDate, ModificationDate),
                 new XElement(ResourcesName,
-                    Resources.Select(r => r.ToXElement(resourceMap, archiveBuilder))),
+                    Resources.Select(r => r.ToXElement(resourceMap))),
                 new XElement(BuildName,
                     Items.Select(i => i.ToXElement(resourceMap))));
             return modelXml;
+        }
+
+        internal void AfterPartAdded(Package package, PackagePart packagePart)
+        {
+            foreach (var resource in Resources)
+            {
+                resource.AfterPartAdded(package, packagePart);
+            }
         }
 
         private IEnumerable<XElement> GetMetadataXElements(string metadataType, string value)

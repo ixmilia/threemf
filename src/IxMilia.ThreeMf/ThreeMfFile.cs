@@ -3,11 +3,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.IO.Packaging;
 using System.Linq;
 using System.Xml.Linq;
 using IxMilia.ThreeMf.Collections;
+using IxMilia.ThreeMf.Extensions;
 
 namespace IxMilia.ThreeMf
 {
@@ -15,7 +15,7 @@ namespace IxMilia.ThreeMf
     {
         private const string RelationshipNamespace = "http://schemas.openxmlformats.org/package/2006/relationships";
         private const string ModelRelationshipType = "http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel";
-        private const string RelsEntryPath = "/_rels/.rels";
+        private const string ModelContentType = "application/vnd.ms-package.3dmanufacturing-3dmodel+xml";
         private const string DefaultModelEntryName = "/3D/3dmodel";
         private const string ModelPathExtension = ".model";
         private const string TargetAttributeName = "Target";
@@ -37,26 +37,23 @@ namespace IxMilia.ThreeMf
 
         public void Save(Stream stream)
         {
-            using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
-            using (var archiveBuilder = new ThreeMfArchiveBuilder(archive))
+            var currentModelSuffix = 0;
+            string NextModelFileName()
             {
-                var currentModelSuffix = 0;
-                var nextModelFileName = new Func<string>(() =>
-                {
-                    var suffix = currentModelSuffix++ == 0 ? string.Empty : $"-{currentModelSuffix}";
-                    return string.Concat(DefaultModelEntryName, suffix, ModelPathExtension);
-                });
-                var modelPaths = Enumerable.Range(0, Models.Count).Select(_ => nextModelFileName()).ToList();
-                var rootRels = new XElement(RelationshipsName,
-                    modelPaths.Select(path => GetRelationshipElement(path, archiveBuilder.NextRelationshipId(), ModelRelationshipType)));
-                archiveBuilder.WriteXmlToArchive(RelsEntryPath, rootRels);
-
+                var suffix = currentModelSuffix++ == 0 ? string.Empty : $"-{currentModelSuffix}";
+                return string.Concat(DefaultModelEntryName, suffix, ModelPathExtension);
+            }
+            using (var package = Package.Open(stream, FileMode.Create))
+            {
+                var modelPaths = Enumerable.Range(0, Models.Count).Select(_ => NextModelFileName()).ToList();
                 for (int i = 0; i < Models.Count; i++)
                 {
                     var model = Models[i];
-                    var modelXml = model.ToXElement(archiveBuilder);
+                    var modelXml = model.ToXElement(package);
                     var modelPath = modelPaths[i];
-                    archiveBuilder.WriteXmlToArchive(modelPath, modelXml);
+                    var modelPart = package.WriteXml(modelPath, ModelContentType, modelXml);
+                    package.CreateRelationship(new Uri(modelPath, UriKind.RelativeOrAbsolute), TargetMode.Internal, ModelRelationshipType);
+                    model.AfterPartAdded(package, modelPart);
                 }
             }
         }

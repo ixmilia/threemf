@@ -19,6 +19,7 @@ namespace IxMilia.ThreeMf
         private const string TextureRelationshipType = "http://schemas.microsoft.com/3dmanufacturing/2013/01/3dtexture";
 
         private byte[] _textureBytes;
+        private Uri _textureUri;
 
         public ThreeMfImageContentType ContentType { get; set; }
         public ThreeMfBoundingBox BoundingBox { get; set; }
@@ -38,10 +39,10 @@ namespace IxMilia.ThreeMf
             ContentType = contentType;
         }
 
-        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, ThreeMfArchiveBuilder archiveBuilder)
+        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap)
         {
             var path = $"/3D/Textures/{Guid.NewGuid().ToString("N")}{ContentType.ToExtensionString()}";
-            archiveBuilder.WriteBinaryDataToArchive(path, TextureBytes, TextureRelationshipType, TextureContentType);
+            _textureUri = new Uri(path, UriKind.RelativeOrAbsolute);
             return new XElement(Texture2DName,
                 new XAttribute(IdAttributeName, Id),
                 new XAttribute(PathAttributeName, path),
@@ -49,6 +50,12 @@ namespace IxMilia.ThreeMf
                 BoundingBox.ToXAttribute(),
                 TileStyleU == ThreeMfTileStyle.Wrap ? null : new XAttribute(TileStyleUAttributeName, TileStyleU.ToTileStyleString()),
                 TileStyleV == ThreeMfTileStyle.Wrap ? null : new XAttribute(TileStyleVAttributeName, TileStyleV.ToTileStyleString()));
+        }
+
+        internal override void AfterPartAdded(Package package, PackagePart packagePart)
+        {
+            packagePart.CreateRelationship(_textureUri, TargetMode.Internal, TextureRelationshipType);
+            package.WriteBinary(_textureUri.ToString(), TextureContentType, TextureBytes);
         }
 
         internal static ThreeMfTexture2D ParseTexture(XElement element, Package package)

@@ -14,7 +14,7 @@ namespace IxMilia.ThreeMf
 
         IEnumerable<IThreeMfPropertyItem> IThreeMfPropertyResource.PropertyItems => Colors;
 
-        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap, ThreeMfArchiveBuilder archiveBuilder)
+        internal override XElement ToXElement(Dictionary<ThreeMfResource, int> resourceMap)
         {
             return new XElement(ColorGroupName,
                 new XAttribute(IdAttributeName, Id),
