@@ -49,6 +49,24 @@ namespace IxMilia.ThreeMf.Test
             var loadedFiles = 0;
             foreach (var path in Directory.EnumerateFiles(samplesDir, "*.3mf", SearchOption.AllDirectories))
             {
+                var fileName = Path.GetFileName(path);
+                if (fileName == "multiprop-metallic.3mf" || fileName == "multiprop-translucent.3mf")
+                {
+                    // undefined namespace `ms`
+                    continue;
+                }
+
+                var pathParts = path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                if (pathParts.Contains("production") || pathParts.Contains("beam lattice"))
+                {
+                    // not yet implemented
+                    continue;
+                }
+                if (pathParts.Contains("MUSTFAIL"))
+                {
+                    // expected to fail
+                    continue;
+                }
                 using (var fs = new FileStream(path, FileMode.Open))
                 {
                     var file = ThreeMfFile.Load(fs);
