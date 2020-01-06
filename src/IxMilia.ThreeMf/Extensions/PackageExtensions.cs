@@ -39,7 +39,7 @@ namespace IxMilia.ThreeMf.Extensions
                 throw new ArgumentNullException(nameof(xml));
             }
 
-            var part = package.CreatePart(new Uri(path, UriKind.RelativeOrAbsolute), contentType);
+            var part = package.CreatePart(new Uri(path, UriKind.RelativeOrAbsolute), contentType, CompressionOption.Normal);
             using (var stream = part.GetStream())
             using (var writer = XmlWriter.Create(stream, WriterSettings))
             {
@@ -57,7 +57,7 @@ namespace IxMilia.ThreeMf.Extensions
                 throw new ArgumentNullException(nameof(data));
             }
 
-            var part = package.CreatePart(new Uri(path, UriKind.RelativeOrAbsolute), contentType);
+            var part = package.CreatePart(new Uri(path, UriKind.RelativeOrAbsolute), contentType, CompressionOption.Normal);
             using (var stream = part.GetStream())
             using (var writer = new BinaryWriter(stream))
             {
