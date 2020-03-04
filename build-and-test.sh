@@ -23,7 +23,7 @@ while [ $# -gt 0 ]; do
 done
 
 # build
-SOLUTION=$_SCRIPT_DIR/src/IxMilia.ThreeMf.sln
+SOLUTION=$_SCRIPT_DIR/IxMilia.ThreeMf.sln
 dotnet restore $SOLUTION
 dotnet build $SOLUTION -c $CONFIGURATION
 

@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26228.4
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IxMilia.ThreeMf", "IxMilia.ThreeMf\IxMilia.ThreeMf.csproj", "{901C40BF-6ABA-4992-B5B1-04309210C847}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IxMilia.ThreeMf", "src\IxMilia.ThreeMf\IxMilia.ThreeMf.csproj", "{901C40BF-6ABA-4992-B5B1-04309210C847}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IxMilia.ThreeMf.Test", "IxMilia.ThreeMf.Test\IxMilia.ThreeMf.Test.csproj", "{4D952C95-629B-4957-B76B-9AD2DE7D0492}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IxMilia.ThreeMf.Test", "src\IxMilia.ThreeMf.Test\IxMilia.ThreeMf.Test.csproj", "{4D952C95-629B-4957-B76B-9AD2DE7D0492}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
