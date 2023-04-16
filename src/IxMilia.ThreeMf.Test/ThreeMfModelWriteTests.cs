@@ -365,7 +365,7 @@ namespace IxMilia.ThreeMf.Test
 <model xmlns:m=""{ThreeMfModel.MaterialNamespace}"">
   <resources>
     <m:texture2d id=""1"" path=""/3D/Textures/
-".Trim(), text);
+".Replace("\r", "").Trim(), text);
             Assert.EndsWith(@"
 .jpg"" contenttype=""image/jpeg"" box=""0 1 2 3"" tilestyleu=""mirror"" />
   </resources>
