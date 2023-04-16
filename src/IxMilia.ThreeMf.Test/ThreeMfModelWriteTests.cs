@@ -24,14 +24,14 @@ namespace IxMilia.ThreeMf.Test
 
         private void VerifyModelXml(string xml, ThreeMfModel model)
         {
-            var actual = GetStrippedModelXml(model);
-            Assert.Equal(xml.Trim(), actual);
+            var actual = GetStrippedModelXml(model).Replace("\r", "");
+            Assert.Equal(xml.Replace("\r", "").Trim(), actual);
         }
 
         private void VerifyMeshXml(string xml, ThreeMfMesh mesh)
         {
-            var actual = StripXmlns(mesh.ToXElement(new Dictionary<ThreeMfResource, int>()).ToString());
-            Assert.Equal(xml.Trim(), actual);
+            var actual = StripXmlns(mesh.ToXElement(new Dictionary<ThreeMfResource, int>()).ToString()).Replace("\r", "");
+            Assert.Equal(xml.Replace("\r", "").Trim(), actual);
         }
 
         private ThreeMfModel ParseXml(string contents)
@@ -358,7 +358,7 @@ namespace IxMilia.ThreeMf.Test
             texture.BoundingBox = new ThreeMfBoundingBox(0.0, 1.0, 2.0, 3.0);
             texture.TileStyleU = ThreeMfTileStyle.Mirror;
             model.Resources.Add(texture);
-            var text = GetStrippedModelXml(model);
+            var text = GetStrippedModelXml(model).Replace("\r", "");
 
             // texture path is randomly generated so we have to check before and after it
             Assert.StartsWith($@"
@@ -371,7 +371,7 @@ namespace IxMilia.ThreeMf.Test
   </resources>
   <build />
 </model>
-".Trim(), text);
+".Replace("\r", "").Trim(), text);
         }
 
         [Fact]
@@ -383,7 +383,7 @@ namespace IxMilia.ThreeMf.Test
             model.Resources.Add(textureGroup);
 
             // texture was never added to the texture group; ensure it is when writing
-            var text = GetStrippedModelXml(model);
+            var text = GetStrippedModelXml(model).Replace("\r", "");
             Assert.EndsWith(@"
 .jpg"" contenttype=""image/jpeg"" />
     <m:texture2dgroup id=""2"" texid=""1"">
@@ -392,7 +392,7 @@ namespace IxMilia.ThreeMf.Test
   </resources>
   <build />
 </model>
-".Trim(), text);
+".Replace("\r", "").Trim(), text);
         }
     }
 }
