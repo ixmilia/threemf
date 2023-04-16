@@ -62,9 +62,9 @@ namespace IxMilia.ThreeMf.Test
 <metadata name=""Description"">line 1</metadata>
 <metadata name=""Description"">line 2</metadata>
 ");
-            Assert.Equal("some title", model.Title);
-            Assert.Equal("line 1\r\nline 2", model.Description);
-            Assert.Null(model.Copyright);
+            Assert.Equal("some title", model.Metadata["Title"]);
+            Assert.Equal("line 1\r\nline 2", model.Metadata["Description"]);
+            Assert.False(model.Metadata.ContainsKey("Copyright"));
         }
 
         [Fact]

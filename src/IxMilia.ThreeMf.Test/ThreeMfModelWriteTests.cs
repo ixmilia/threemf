@@ -70,8 +70,8 @@ namespace IxMilia.ThreeMf.Test
         public void WriteMetadataTest()
         {
             var model = new ThreeMfModel();
-            model.Title = "some title";
-            model.Description = "line 1\nline 2";
+            model.Metadata["Title"] = "some title";
+            model.Metadata["Description"] = "line 1\nline 2";
             VerifyModelXml(@"
 <model>
   <metadata name=""Title"">some title</metadata>
